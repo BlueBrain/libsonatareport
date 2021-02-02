@@ -10,31 +10,34 @@ if(NOT SONATA_VERSION)
                     OUTPUT_STRIP_TRAILING_WHITESPACE)
     if(GIT_VERSION_FAILED)
       message(
-        FATAL_ERROR
+        STATUS
           "Could not retrieve version from command 'git describe --tags'\n"
           ${GIT_VERSION_ERROR})
+    else()
+        # keep last line of command output
+        string(REPLACE "\n"
+                       ";"
+                       GIT_PKG_VERSION_FULL
+                       "${GIT_PKG_VERSION_FULL}")
+        list(GET GIT_PKG_VERSION_FULL -1 SONATA_VERSION)
     endif()
-
-# keep last line of command output
-    string(REPLACE "\n"
-                   ";"
-                   GIT_PKG_VERSION_FULL
-                   "${GIT_PKG_VERSION_FULL}")
-   list(GET GIT_PKG_VERSION_FULL -1 SONATA_VERSION)
 endif()
 
-# keep MAJOR.MINOR.PATCH (PATCH being optional)
-string(REGEX
-       REPLACE "v?([0-9]+\\.[0-9]+(\\.[0-9]+)?).*"
-               "\\1"
-               SONATA_VERSION
-               "${SONATA_VERSION}")
+if(SONATA_VERSION)
+    # keep MAJOR.MINOR.PATCH (PATCH being optional)
+    string(REGEX
+           REPLACE "v?([0-9]+\\.[0-9]+(\\.[0-9]+)?).*"
+                   "\\1"
+                   SONATA_VERSION
+                   "${SONATA_VERSION}")
+    # Get "major.minor" from string "major.minor.version"
+    string(REGEX MATCH "^(.*)\\.[^.]*$" dummy ${SONATA_VERSION})
+    set(SONATA_VERSION_ABI ${CMAKE_MATCH_1})
 
-# Get "major.minor" from string "major.minor.version"
-string(REGEX MATCH "^(.*)\\.[^.]*$" dummy ${SONATA_VERSION})
-set(SONATA_VERSION_ABI ${CMAKE_MATCH_1})
-
-project(libsonatareport VERSION ${SONATA_VERSION})
+    project(libsonatareport VERSION ${SONATA_VERSION})
+else()
+    project(libsonatareport)
+endif()
 
 option(EXTLIB_FROM_SUBMODULES "Use Git submodules for header-only dependencies" OFF)
 option(${PROJECT_NAME}_CXX_WARNINGS "Compile C++ with warnings as errors" ON)
