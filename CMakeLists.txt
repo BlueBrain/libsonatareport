@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 cmake_policy(VERSION 3.3)
 
-if(NOT SONATA_VERSION)
+if(NOT SONATA_REPORT_VERSION)
     execute_process(COMMAND git describe --tags
                     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
                     RESULT_VARIABLE GIT_VERSION_FAILED
@@ -19,22 +19,22 @@ if(NOT SONATA_VERSION)
                        ";"
                        GIT_PKG_VERSION_FULL
                        "${GIT_PKG_VERSION_FULL}")
-        list(GET GIT_PKG_VERSION_FULL -1 SONATA_VERSION)
+        list(GET GIT_PKG_VERSION_FULL -1 SONATA_REPORT_VERSION)
     endif()
 endif()
 
-if(SONATA_VERSION)
+if(SONATA_REPORT_VERSION)
     # keep MAJOR.MINOR.PATCH (PATCH being optional)
     string(REGEX
            REPLACE "v?([0-9]+\\.[0-9]+(\\.[0-9]+)?).*"
                    "\\1"
-                   SONATA_VERSION
-                   "${SONATA_VERSION}")
+                   SONATA_REPORT_VERSION
+                   "${SONATA_REPORT_VERSION}")
     # Get "major.minor" from string "major.minor.version"
-    string(REGEX MATCH "^(.*)\\.[^.]*$" dummy ${SONATA_VERSION})
-    set(SONATA_VERSION_ABI ${CMAKE_MATCH_1})
+    string(REGEX MATCH "^(.*)\\.[^.]*$" dummy ${SONATA_REPORT_VERSION})
+    set(SONATA_REPORT_VERSION_ABI ${CMAKE_MATCH_1})
 
-    project(libsonatareport VERSION ${SONATA_VERSION})
+    project(libsonatareport VERSION ${SONATA_REPORT_VERSION})
 else()
     project(libsonatareport)
 endif()
