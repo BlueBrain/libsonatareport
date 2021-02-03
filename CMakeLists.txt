@@ -39,10 +39,10 @@ else()
     project(libsonatareport)
 endif()
 
-option(EXTLIB_FROM_SUBMODULES "Use Git submodules for header-only dependencies" OFF)
-option(${PROJECT_NAME}_CXX_WARNINGS "Compile C++ with warnings as errors" ON)
-option(REPORTS_ENABLE_MPI "Enable MPI-based execution" ON)
-option(SONATA_REPORT_TEST "Enable tests" ON)
+option(SONATA_REPORT_ENABLE_SUBMODULES "Use Git submodules for header-only dependencies" OFF)
+option(SONATA_REPORT_ENABLE_WARNING_AS_ERROR "Compile C++ with warnings as errors" ON)
+option(SONATA_REPORT_ENABLE_MPI "Enable MPI-based execution" ON)
+option(SONATA_REPORT_ENABLE_TEST "Enable tests" ON)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
@@ -50,13 +50,13 @@ set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SONATA_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
-set(SONATA_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
+set(SONATA_REPORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+set(SONATA_REPORT_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 
-if(SONATA_CXX_WARNINGS)
-  set(SONATA_COMPILE_OPTIONS -Wall -Wextra -pedantic -Werror)
+if(SONATA_REPORT_ENABLE_WARNING_AS_ERROR)
+  set(SONATA_REPORT_COMPILE_OPTIONS -Wall -Wextra -pedantic -Werror)
 else()
-  set(SONATA_COMPILE_OPTIONS -Wall -Wextra -pedantic)
+  set(SONATA_REPORT_COMPILE_OPTIONS -Wall -Wextra -pedantic)
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -70,7 +70,7 @@ endif()
 # =============================================================================
 
 find_package(HDF5)
-if(REPORTS_ENABLE_MPI)
+if(SONATA_REPORT_ENABLE_MPI)
     find_package(MPI REQUIRED)
     if (MPI_FOUND)
         # With MPI we prefer HDF5 parallel
@@ -105,7 +105,7 @@ else()
     endif()
 endif()
 
-if (EXTLIB_FROM_SUBMODULES)
+if (SONATA_REPORT_ENABLE_SUBMODULES)
     add_subdirectory(extlib EXCLUDE_FROM_ALL)
 else()
     find_package(spdlog REQUIRED)
@@ -116,7 +116,7 @@ endif()
 # =============================================================================
 add_subdirectory(src)
 
-install(DIRECTORY ${SONATA_INCLUDE_DIR}/bbp
+install(DIRECTORY ${SONATA_REPORT_INCLUDE_DIR}/bbp
     DESTINATION include
 )
 
@@ -133,8 +133,8 @@ install(EXPORT sonata-targets
 # Testing
 # =============================================================================
 
-if(SONATA_REPORT_TEST)
-    if (EXTLIB_FROM_SUBMODULES)
+if(SONATA_REPORT_ENABLE_TEST)
+    if (SONATA_REPORT_ENABLE_SUBMODULES)
         include(extlib/Catch2/contrib/Catch.cmake)
     else()
         find_package(Catch2 REQUIRED)

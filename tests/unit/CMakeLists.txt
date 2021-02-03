@@ -9,8 +9,8 @@ set(TEST_SOURCES
 add_executable(reports_unit_tests ${TEST_SOURCES})
 target_include_directories(reports_unit_tests
     PRIVATE
-        $<BUILD_INTERFACE:${SONATA_INCLUDE_DIR}>
-        $<BUILD_INTERFACE:${SONATA_SRC_DIR}>
+        $<BUILD_INTERFACE:${SONATA_REPORT_INCLUDE_DIR}>
+        $<BUILD_INTERFACE:${SONATA_REPORT_SRC_DIR}>
     SYSTEM
         ${PROJECT_SOURCE_DIR}/extlib/spdlog/include
 )
