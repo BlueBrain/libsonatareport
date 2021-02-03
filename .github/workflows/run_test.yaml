@@ -10,8 +10,8 @@ jobs:
             matrix:
                 os: [ ubuntu-18.04 ]
                 config:
-                  - {cmake_option: "-DEXTLIB_FROM_SUBMODULES=ON", mpi: ON}
-                  - {cmake_option: "-DEXTLIB_FROM_SUBMODULES=ON -DREPORTS_ENABLE_MPI=OFF", mpi: OFF}
+                  - {cmake_option: "-DSONATA_REPORT_ENABLE_SUBMODULES=ON", mpi: ON}
+                  - {cmake_option: "-DSONATA_REPORT_ENABLE_SUBMODULES=ON -DSONATA_REPORT_ENABLE_MPI=OFF", mpi: OFF}
         steps:
             - name: Checkout repository
               uses: actions/checkout@v2
