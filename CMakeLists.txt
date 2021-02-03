@@ -109,6 +109,7 @@ if (EXTLIB_FROM_SUBMODULES)
     include(extlib/Catch2/contrib/Catch.cmake)
 else()
     find_package(Catch2 REQUIRED)
+    include(Catch)
     find_package(spdlog REQUIRED)
 endif()
 
