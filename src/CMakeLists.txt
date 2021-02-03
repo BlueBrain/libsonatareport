@@ -19,11 +19,11 @@ target_include_directories(sonata_report
     PUBLIC
         ${MPI_INCLUDE_PATH}
         ${HDF5_INCLUDE_DIRS}
-        $<BUILD_INTERFACE:${SONATA_INCLUDE_DIR}>
+        $<BUILD_INTERFACE:${SONATA_REPORT_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:include>
 )
 target_compile_options(sonata_report
-    PRIVATE ${SONATA_COMPILE_OPTIONS}
+    PRIVATE ${SONATA_REPORT_COMPILE_OPTIONS}
 )
 if (ENABLE_COVERAGE)
     target_compile_options(sonata_report
@@ -33,10 +33,6 @@ if (ENABLE_COVERAGE)
         PRIVATE gcov
     )
 endif()
-target_compile_definitions(sonata_report
-    PUBLIC SONATA_DLL
-    PRIVATE SONATA_DLL_EXPORTS
-)
 set_target_properties(sonata_report
     PROPERTIES
     OUTPUT_NAME "sonatareport"
