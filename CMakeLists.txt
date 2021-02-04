@@ -40,7 +40,7 @@ else()
 endif()
 
 option(SONATA_REPORT_ENABLE_SUBMODULES "Use Git submodules for header-only dependencies" OFF)
-option(SONATA_REPORT_ENABLE_WARNING_AS_ERROR "Compile C++ with warnings as errors" ON)
+option(SONATA_REPORT_ENABLE_WARNING_AS_ERROR "Compile C++ with warnings as errors" OFF)
 option(SONATA_REPORT_ENABLE_MPI "Enable MPI-based execution" ON)
 option(SONATA_REPORT_ENABLE_TEST "Enable tests" ON)
 
@@ -53,16 +53,17 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SONATA_REPORT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
 set(SONATA_REPORT_SRC_DIR ${PROJECT_SOURCE_DIR}/src)
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(ENABLE_COVERAGE ON)
+    set(SONATA_REPORT_ENABLE_WARNING_AS_ERROR ON)
+else()
+    set(ENABLE_COVERAGE OFF)
+endif()
+
 if(SONATA_REPORT_ENABLE_WARNING_AS_ERROR)
   set(SONATA_REPORT_COMPILE_OPTIONS -Wall -Wextra -pedantic -Werror)
 else()
   set(SONATA_REPORT_COMPILE_OPTIONS -Wall -Wextra -pedantic)
-endif()
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(ENABLE_COVERAGE ON)
-else()
-    set(ENABLE_COVERAGE OFF)
 endif()
 
 # =============================================================================
