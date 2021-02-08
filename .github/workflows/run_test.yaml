@@ -38,6 +38,11 @@ jobs:
                 cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF .. && make -j2 all install DESTDIR=INSTALL
               working-directory: ${{runner.workspace}}
             - name: Build and run tests
-              run: mkdir BUILD && cd BUILD && cmake -DCMAKE_PREFIX_PATH=${{runner.workspace}}/libsonata/BUILD/INSTALL ${cmake_option} .. && make -j2 all && ctest --output-on-failure -V
+              run: mkdir BUILD && cd BUILD && cmake -DCMAKE_PREFIX_PATH=${{runner.workspace}}/libsonata/BUILD/INSTALL ${cmake_option} .. && make -j2 all
               env:
                 cmake_option: ${{ matrix.config.cmake_option }}
+            - name: stop here
+              uses: mxschmitt/action-tmate@v3
+            - name: Run tests
+              run: ctest --output-on-failure
+              working-directory: BUILD
