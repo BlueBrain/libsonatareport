@@ -27,7 +27,7 @@ jobs:
               run: sudo apt-get install libhdf5-dev hdf5-tools libboost-all-dev
             - name: Remove warning
               run: |
-                ompi_info --param mca mca_param_files
+                ompi_info --all | grep mca_param_files
                 echo "btl_base_warn_component_used = 0" | sudo tee /etc/openmpi-mca-params.conf
             - name: Install libsonata with mpi
               if: ${{ matrix.config.mpi == 'ON' }}
