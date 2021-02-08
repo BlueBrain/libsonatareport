@@ -23,7 +23,9 @@ jobs:
               if: ${{ matrix.config.mpi == 'ON' }}
               run: sudo apt-get install mpich libmpich-dev libhdf5-mpich-dev hdf5-tools python3-pip
             - name: Install libsonata
-              run: python3 -m pip install setuptools libsonata
+              run: |
+                python3 -m pip install setuptools
+                python3 -m pip install libsonata
             - name: Install serial packages
               if: ${{ matrix.config.mpi == 'OFF' }}
               run: sudo apt-get install libhdf5-dev hdf5-tools
