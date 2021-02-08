@@ -41,7 +41,9 @@ using Spikes = std::vector<Spike>;
 */
 class SONATA_API SpikeReader
 {
-      public: class Population {
+  public:
+    class Population
+    {
       public:
         enum class Sorting : char {
             none = 0,
