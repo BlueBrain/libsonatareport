@@ -21,7 +21,7 @@ jobs:
               run: git submodule update --init --force --recursive
             - name: Install parallel packages
               if: ${{ matrix.config.mpi == 'ON' }}
-              run: sudo apt-get install mpich libmpich-dev libhdf5-mpich-dev hdf5-tools python3-pip
+              run: sudo apt-get install mpich libmpich-dev libhdf5-mpich-dev hdf5-tools libboost-all-dev python3-pip
             - name: Install libsonata
               run: |
                 python3 -m pip install setuptools
