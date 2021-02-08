@@ -18,10 +18,8 @@ jobs:
             - name: Install libsonata
               run: |
                 git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata
-                cd libsonata && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF .. && make -j8 all install DESTDIR=INSTALL
+                cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF .. && make -j8 all install DESTDIR=INSTALL
               working-directory: ${{runner.workspace}}
-            - name: live debug session
-              uses: mxschmitt/action-tmate@v3
             - name: Build and run unittests
               run: ci/coverage_test.sh ${{runner.workspace}}/libsonata/BUILD/INSTALL
             - name: Upload Coverage to Coveralls
