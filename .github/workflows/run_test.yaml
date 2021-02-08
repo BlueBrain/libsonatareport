@@ -27,9 +27,10 @@ jobs:
               run: sudo apt-get install libhdf5-dev hdf5-tools
             - name: Install libsonata
               run: |
-                python3 -m pip install setuptools
-                python3 -m pip install libsonata
+                git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata
+                cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF .. && make -j8 all install DESTDIR=INSTALL
+              working-directory: ${{runner.workspace}}
             - name: Build and run tests
-              run: mkdir BUILD && cd BUILD && cmake ${cmake_option} .. && make all && ctest --output-on-failure
+              run: mkdir BUILD && cd BUILD && cmake -DCMAKE_PREFIX_PATH=${{runner.workspace}}/libsonata/BUILD/INSTALL ${cmake_option} .. && make all && ctest --output-on-failure
               env:
                 cmake_option: ${{ matrix.config.cmake_option }}
