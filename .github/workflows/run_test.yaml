@@ -22,13 +22,13 @@ jobs:
             - name: Install parallel packages
               if: ${{ matrix.config.mpi == 'ON' }}
               run: sudo apt-get install mpich libmpich-dev libhdf5-mpich-dev hdf5-tools libboost-all-dev python3-pip
+            - name: Install serial packages
+              if: ${{ matrix.config.mpi == 'OFF' }}
+              run: sudo apt-get install libhdf5-dev hdf5-tools
             - name: Install libsonata
               run: |
                 python3 -m pip install setuptools
                 python3 -m pip install libsonata
-            - name: Install serial packages
-              if: ${{ matrix.config.mpi == 'OFF' }}
-              run: sudo apt-get install libhdf5-dev hdf5-tools
             - name: Build and run tests
               run: mkdir BUILD && cd BUILD && cmake ${cmake_option} .. && make all && ctest --output-on-failure
               env:

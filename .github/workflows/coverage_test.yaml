@@ -19,6 +19,8 @@ jobs:
               run: |
                 python3 -m pip install setuptools
                 python3 -m pip install libsonata
+            - name: live debug session
+              uses: mxschmitt/action-tmate@v3
             - name: Build and run unittests
               run: ci/coverage_test.sh
             - name: Upload Coverage to Coveralls
