@@ -21,7 +21,7 @@ jobs:
               run: git submodule update --init --force --recursive --depth 1
             - name: Install parallel packages
               if: ${{ matrix.config.mpi == 'ON' }}
-              run: sudo apt-get install mpich libmpich-dev libhdf5-mpich-dev hdf5-tools libboost-all-dev
+              run: sudo apt-get install libhdf5-openmpi-dev hdf5-tools libboost-all-dev
             - name: Install serial packages
               if: ${{ matrix.config.mpi == 'OFF' }}
               run: sudo apt-get install libhdf5-dev hdf5-tools libboost-all-dev
