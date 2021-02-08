@@ -16,7 +16,7 @@ jobs:
             - name: Install packages
               run: sudo apt-get install build-essential libhdf5-dev hdf5-tools lcov python3-pip
             - name: Install libsonata
-              run: python3 -m pip install libsonata
+              run: python3 -m pip install setuptools libsonata
             - name: Build and run unittests
               run: ci/coverage_test.sh
             - name: Upload Coverage to Coveralls
