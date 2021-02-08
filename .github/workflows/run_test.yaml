@@ -21,10 +21,10 @@ jobs:
               run: git submodule update --init --force --recursive
             - name: Install parallel packages
               if: ${{ matrix.config.mpi == 'ON' }}
-              run: sudo apt-get install mpich libmpich-dev libhdf5-mpich-dev hdf5-tools libboost-all-dev python3-pip
+              run: sudo apt-get install mpich libmpich-dev libhdf5-mpich-dev hdf5-tools libboost-all-dev
             - name: Install serial packages
               if: ${{ matrix.config.mpi == 'OFF' }}
-              run: sudo apt-get install libhdf5-dev hdf5-tools
+              run: sudo apt-get install libhdf5-dev hdf5-tools libboost-all-dev
             - name: Install libsonata with mpi
               if: ${{ matrix.config.mpi == 'ON' }}
               run: |
