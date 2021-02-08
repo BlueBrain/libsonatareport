@@ -2,6 +2,7 @@ set(TEST_SOURCES
     tests.cpp
     test_node.cpp
     test_report.cpp
+    test_report_reader.cpp
     test_sonatadata.cpp
     test_sonatareport.cpp
     )
@@ -20,6 +21,8 @@ target_link_libraries(reports_unit_tests
         Catch2::Catch2
         spdlog::spdlog_header_only
         ${MPI_CXX_LIBRARIES}
+        HighFive
+        sonata::sonata_shared
 )
 
-catch_discover_tests(reports_unit_tests)
+catch_discover_tests(reports_unit_tests WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})

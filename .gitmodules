@@ -4,3 +4,9 @@
 [submodule "extlib/spdlog"]
 	path = extlib/spdlog
 	url = https://github.com/gabime/spdlog.git
+[submodule "extlib/HighFive"]
+	path = extlib/HighFive
+	url = https://github.com/BlueBrain/HighFive.git
+[submodule "extlib/fmt"]
+	path = extlib/fmt
+	url = https://github.com/fmtlib/fmt.git
