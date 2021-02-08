@@ -17,12 +17,13 @@ jobs:
               run: sudo apt-get install build-essential libhdf5-dev hdf5-tools lcov libboost-all-dev python3-pip
             - name: Install libsonata
               run: |
-                python3 -m pip install setuptools
-                python3 -m pip install libsonata
+                git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata
+                cd libsonata && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF .. && make -j8 all install DESTDIR=INSTALL
+              working-directory: ${{runner.workspace}}
             - name: live debug session
               uses: mxschmitt/action-tmate@v3
             - name: Build and run unittests
-              run: ci/coverage_test.sh
+              run: ci/coverage_test.sh ${{runner.workspace}}/libsonata/BUILD/INSTALL
             - name: Upload Coverage to Coveralls
               uses: coverallsapp/github-action@master
               with:
