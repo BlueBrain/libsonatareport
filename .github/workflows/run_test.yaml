@@ -10,13 +10,11 @@ jobs:
             matrix:
                 os: [ ubuntu-18.04 ]
                 config:
-                  - {cmake_option: "-DSONATA_REPORT_ENABLE_SUBMODULES=ON -DCMAKE_C_COMPILER:STRING=mpicc -DCMAKE_CXX_COMPILER:STRING=mpicxx", mpi: ON}
+                  - {cmake_option: "-DSONATA_REPORT_ENABLE_SUBMODULES=ON", mpi: ON}
                   - {cmake_option: "-DSONATA_REPORT_ENABLE_SUBMODULES=ON -DSONATA_REPORT_ENABLE_MPI=OFF", mpi: OFF}
         steps:
             - name: Checkout repository
               uses: actions/checkout@v2
-            - name: Fetch repository
-              run: git fetch --prune --unshallow
             - name: Get submodules
               run: git submodule update --init --force --recursive --depth 1
             - name: Install parallel packages
@@ -27,7 +25,6 @@ jobs:
               run: sudo apt-get install libhdf5-dev hdf5-tools libboost-all-dev
             - name: Remove warning
               run: echo "btl_base_warn_component_unused = 0" | sudo tee --append /etc/openmpi/openmpi-mca-params.conf
-
             - name: Install libsonata with mpi
               if: ${{ matrix.config.mpi == 'ON' }}
               run: |
