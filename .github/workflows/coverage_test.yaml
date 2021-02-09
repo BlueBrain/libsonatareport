@@ -9,12 +9,10 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v2
-            - name: Fetch repository
-              run: git fetch --prune --unshallow
             - name: Get submodules
               run: git submodule update --init --force --recursive --depth 1
             - name: Install packages
-              run: sudo apt-get install build-essential libhdf5-dev hdf5-tools lcov libboost-all-dev
+              run: sudo apt-get install build-essential libhdf5-dev hdf5-tools lcov
             - name: Install libsonata
               run: |
                 git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata

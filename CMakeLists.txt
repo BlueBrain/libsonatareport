@@ -107,6 +107,7 @@ else()
     endif()
 endif()
 
+option(HIGHFIVE_USE_BOOST "Disable boost in highfive" OFF)
 if (SONATA_REPORT_ENABLE_SUBMODULES)
     add_subdirectory(extlib EXCLUDE_FROM_ALL)
 else()
