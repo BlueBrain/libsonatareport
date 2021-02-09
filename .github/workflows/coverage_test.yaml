@@ -12,7 +12,7 @@ jobs:
             - name: Get submodules
               run: git submodule update --init --force --recursive --depth 1
             - name: Install packages
-              run: sudo apt-get install build-essential libhdf5-dev lcov
+              run: sudo apt-get install build-essential libhdf5-dev hdf5-tools lcov
             - name: Install libsonata
               run: |
                 git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata
