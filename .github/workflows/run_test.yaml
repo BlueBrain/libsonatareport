@@ -11,7 +11,6 @@ jobs:
                 os: [ ubuntu-18.04 ]
                 config:
                   - {cmake_option: "-DSONATA_REPORT_ENABLE_SUBMODULES=ON", mpi: ON}
-                  - {cmake_option: "-DSONATA_REPORT_ENABLE_SUBMODULES=ON -DSONATA_REPORT_ENABLE_MPI=OFF", mpi: OFF}
         steps:
             - name: Checkout repository
               uses: actions/checkout@v2
@@ -30,7 +29,7 @@ jobs:
               if: ${{ matrix.config.mpi == 'ON' }}
               run: |
                 git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata
-                cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF -DCMAKE_C_COMPILER:STRING=mpicc -DCMAKE_CXX_COMPILER:STRING=mpicxx .. && make -j2 all install DESTDIR=INSTALL
+                cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF .. && make -j2 all install DESTDIR=INSTALL
               working-directory: ${{runner.workspace}}
             - name: Install libsonata without mpi
               if: ${{ matrix.config.mpi == 'OFF' }}
