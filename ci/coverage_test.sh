@@ -13,6 +13,7 @@ cmake                           \
     -DCMAKE_BUILD_TYPE=Debug    \
     -DSONATA_REPORT_ENABLE_SUBMODULES=ON \
     -DSONATA_REPORT_ENABLE_MPI=OFF \
+    -DCMAKE_PREFIX_PATH="$1" \
     ..
 make -j2
 make coverage
