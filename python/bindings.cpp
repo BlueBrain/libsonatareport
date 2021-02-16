@@ -32,7 +32,7 @@ py::array managedMemoryArray(const DATA_T* data, const DIMS_T& dims, const OWNER
 #define DOC_SPIKEREADER_POP(x) DOC(bbp, sonata, SpikeReader, Population, x)
 #define DOC_SPIKEREADER(x) DOC(bbp, sonata, SpikeReader, x)
 #define DOC_REPORTREADER_POP(x) DOC(bbp, sonata, ReportReader, Population, x)
-}
+}  // namespace
 
 namespace pybind11 {
 namespace detail {
