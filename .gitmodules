@@ -10,3 +10,6 @@
 [submodule "extlib/fmt"]
 	path = extlib/fmt
 	url = https://github.com/fmtlib/fmt.git
+[submodule "python/pybind11"]
+	path = python/pybind11
+	url = https://github.com/pybind/pybind11.git

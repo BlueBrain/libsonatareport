@@ -43,6 +43,7 @@ option(SONATA_REPORT_ENABLE_SUBMODULES "Use Git submodules for header-only depen
 option(SONATA_REPORT_ENABLE_WARNING_AS_ERROR "Compile C++ with warnings as errors" OFF)
 option(SONATA_REPORT_ENABLE_MPI "Enable MPI-based execution" ON)
 option(SONATA_REPORT_ENABLE_TEST "Enable tests" ON)
+option(SONATA_REPORT_ENABLE_PYTHON "Enable python bindings" OFF)
 set(SONATA_REPORT_SONATA_INSTALL_DIR "" CACHE PATH "The path to the directory where libsonata is installed")
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
@@ -116,6 +117,10 @@ else()
 endif()
 
 find_package(sonata REQUIRED)
+
+if(SONATA_REPORT_ENABLE_PYTHON)
+    add_subdirectory(python)
+endif()
 
 # =============================================================================
 # Targets
