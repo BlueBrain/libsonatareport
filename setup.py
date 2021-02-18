@@ -141,7 +141,7 @@ setup(
         test=PkgTest,
     ),
     zip_safe=False,
-    setup_requires="setuptools_scm",
+    setup_requires=["setuptools_scm", "numpy"],
     use_scm_version={"local_scheme": "no-local-version",
                      },
     package_dir={"": "python"},
