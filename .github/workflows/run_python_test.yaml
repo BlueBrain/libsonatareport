@@ -15,7 +15,7 @@ jobs:
             - name: Get submodules
               run: git submodule update --init --force --recursive --depth 1
             - name: Install packages
-              run: sudo apt-get install libhdf5-dev
+              run: sudo apt-get install libhdf5-openmpi-dev
             - name: Install libsonata
               run: |
                 git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata
