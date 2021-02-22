@@ -1,14 +1,11 @@
-name: run-test
+name: run-python-test
 on:
     push:
 
 jobs:
     build:
-        name: run-test
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                os: [ ubuntu-18.04 ]
+        name: run-python-test
+        runs-on: ubuntu-18.04
         steps:
             - name: Checkout repository
               uses: actions/checkout@v2
