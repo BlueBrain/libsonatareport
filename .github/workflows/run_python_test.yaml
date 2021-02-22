@@ -24,10 +24,10 @@ jobs:
             - name: Install libsonata python
               uses: BSFishy/pip-action@v1
               with:
-                packages: .
+                packages: ../libsonata
             - name: Install libsonatareport python
               uses: BSFishy/pip-action@v1
               with:
-                packages: ../libsonatareport
+                packages: .
             - name: Run tests
               run: python setup.py test
