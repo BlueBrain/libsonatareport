@@ -15,16 +15,15 @@ jobs:
             - name: Get submodules
               run: git submodule update --init --force --recursive --depth 1
             - name: Install packages
-              run: sudo apt-get install libhdf5-openmpi-dev
+              run: sudo apt-get install libhdf5-dev
             - name: Install libsonata
               run: |
                 git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata
-                cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF -DCMAKE_C_COMPILER:STRING=mpicc -DCMAKE_CXX_COMPILER:STRING=mpicxx .. && make -j2 all install DESTDIR=INSTALL
+                cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF .. && make -j2 all install DESTDIR=INSTALL
               working-directory: ${{runner.workspace}}
             - name: Install libsonata python
-              uses: BSFishy/pip-action@v1
-              with:
-                packages: ../libsonata
+              run: pip install .
+              working-directory: ${{runner.workspace}}/libsonata
             - name: Install libsonatareport python
               uses: BSFishy/pip-action@v1
               with:
