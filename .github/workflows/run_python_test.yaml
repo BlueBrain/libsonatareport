@@ -19,7 +19,7 @@ jobs:
             - name: Install libsonata
               run: |
                 git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata
-                cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF .. && make -j2 all install DESTDIR=INSTALL
+                cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF -DCMAKE_C_COMPILER:STRING=mpicc -DCMAKE_CXX_COMPILER:STRING=mpicxx .. && make -j2 all install DESTDIR=INSTALL
               working-directory: ${{runner.workspace}}
             - name: Install libsonata python
               uses: BSFishy/pip-action@v1
