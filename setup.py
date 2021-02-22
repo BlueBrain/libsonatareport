@@ -78,6 +78,7 @@ class CMakeBuild(build_ext, object):
             "-DSONATA_REPORT_ENABLE_TEST={}".format(os.environ.get("SONATA_REPORT_ENABLE_TEST", "OFF")),
             "-DSONATA_REPORT_ENABLE_SUBMODULES=ON",
             "-DSONATA_REPORT_ENABLE_PYTHON=ON",
+            "-DSONATA_REPORT_ENABLE_MPI=OFF",
             "-DSONATA_REPORT_VERSION=" + self.distribution.get_version(),
             "-DCMAKE_BUILD_TYPE=",
             '-DPYTHON_EXECUTABLE=' + sys.executable,
