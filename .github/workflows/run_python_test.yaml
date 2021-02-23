@@ -27,6 +27,6 @@ jobs:
             - name: Install libsonatareport python
               run: pip install .
               env:
-                SONATA_REPORT_SONATA_PREFIX_PATH: ../libsonata/BUILD/INSTALL
+                SONATA_REPORT_SONATA_PREFIX_PATH: ${{ runner.workspace }}/libsonata/BUILD/INSTALL
             - name: Run tests
               run: python setup.py test
