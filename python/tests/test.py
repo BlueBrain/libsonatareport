@@ -4,7 +4,6 @@ import unittest
 
 import numpy as np
 
-from libsonata import (Selection, SonataError)
 from libsonatareport import (SpikeReader, SpikePopulation,
                        SomaReportReader, SomaReportPopulation,
                        ElementReportReader, ElementReportPopulation,
