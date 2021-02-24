@@ -18,7 +18,7 @@ jobs:
               run: sudo apt-get install libhdf5-dev
             - name: Install libsonata
               run: |
-                git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata
+                git clone --recurse-submodules --shallow-submodules --depth 1 --branch remove_from_libsonata_report https://github.com/BlueBrain/libsonata
                 cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF .. && make -j2 all install DESTDIR=INSTALL
               working-directory: ${{runner.workspace}}
             - name: Install libsonata python
