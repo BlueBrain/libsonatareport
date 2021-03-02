@@ -42,8 +42,8 @@ target_link_libraries(sonata_report
     PRIVATE spdlog::spdlog_header_only
     PRIVATE ${MPI_CXX_LIBRARIES}
     PRIVATE ${HDF5_C_LIBRARIES}
-    PRIVATE HighFive
-    PRIVATE sonata::sonata_shared
+    PUBLIC HighFive
+    PUBLIC sonata::sonata_shared
     PRIVATE fmt::fmt-header-only
 )
 
