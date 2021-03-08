@@ -43,7 +43,6 @@ option(SONATA_REPORT_ENABLE_SUBMODULES "Use Git submodules for header-only depen
 option(SONATA_REPORT_ENABLE_WARNING_AS_ERROR "Compile C++ with warnings as errors" OFF)
 option(SONATA_REPORT_ENABLE_MPI "Enable MPI-based execution" ON)
 option(SONATA_REPORT_ENABLE_TEST "Enable tests" ON)
-option(SONATA_REPORT_ENABLE_PYTHON "Enable python bindings" OFF)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
@@ -107,19 +106,10 @@ else()
     endif()
 endif()
 
-option(HIGHFIVE_USE_BOOST "Disable boost in highfive" OFF)
 if (SONATA_REPORT_ENABLE_SUBMODULES)
     add_subdirectory(extlib EXCLUDE_FROM_ALL)
 else()
-    find_package(fmt REQUIRED)
     find_package(spdlog REQUIRED)
-    find_package(HighFive REQUIRED)
-endif()
-
-find_package(sonata REQUIRED)
-
-if(SONATA_REPORT_ENABLE_PYTHON)
-    add_subdirectory(python)
 endif()
 
 # =============================================================================
