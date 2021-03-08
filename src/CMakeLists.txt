@@ -9,7 +9,6 @@ set(sonatareport_SOURCES
     "data/sonata_data.cpp"
     "io/hdf5_writer.cpp"
     "utils/logger.cpp"
-    "report_reader.cpp"
     )
 
 # Shared library
@@ -42,9 +41,6 @@ target_link_libraries(sonata_report
     PRIVATE spdlog::spdlog_header_only
     PRIVATE ${MPI_CXX_LIBRARIES}
     PRIVATE ${HDF5_C_LIBRARIES}
-    PRIVATE HighFive
-    PRIVATE sonata::sonata_shared
-    PRIVATE fmt::fmt-header-only
 )
 
 install(TARGETS sonata_report

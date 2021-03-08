@@ -9,17 +9,14 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v2
+            - name: Fetch repository
+              run: git fetch --prune --unshallow
             - name: Get submodules
-              run: git submodule update --init --force --recursive --depth 1
+              run: git submodule update --init --force --recursive
             - name: Install packages
               run: sudo apt-get install build-essential libhdf5-dev hdf5-tools lcov
-            - name: Install libsonata
-              run: |
-                git clone --recurse-submodules --shallow-submodules --depth 1 https://github.com/BlueBrain/libsonata
-                cd libsonata && git tag 1337.42 && mkdir BUILD && cd BUILD && cmake -DCMAKE_INSTALL_PREFIX=/ -DEXTLIB_FROM_SUBMODULES=ON -DSONATA_PYTHON=OFF -DSONATA_TESTS=OFF -DSONATA_CXX_WARNINGS=OFF .. && make -j8 all install DESTDIR=INSTALL
-              working-directory: ${{runner.workspace}}
             - name: Build and run unittests
-              run: ci/coverage_test.sh ${{runner.workspace}}/libsonata/BUILD/INSTALL
+              run: ci/coverage_test.sh
             - name: Upload Coverage to Coveralls
               uses: coverallsapp/github-action@master
               with:
