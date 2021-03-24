@@ -163,8 +163,16 @@ struct ParallelImplementation {
 
     static void close(){};
     static std::tuple<hid_t, hid_t> prepare_write(const std::string& report_name, hid_t plist_id) {
-        // Enable MPI access
         MPI_Info info = MPI_INFO_NULL;
+
+        // Disable MPI-IO optimizations for better IME support
+        if (report_name.find("ime://") == 0 || report_name.find("/ime/") == 0) {
+            MPI_Info_create(&info);
+            MPI_Info_set(info, "romio_cb_write", "disable");
+            MPI_Info_set(info, "romio_ds_write", "disable");
+        }
+
+        // Set the MPI Info object with the hints
         H5Pset_fapl_mpio(plist_id, get_Comm(report_name), info);
 
         // Initialize independent/collective lists

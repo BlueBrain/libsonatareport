@@ -23,7 +23,15 @@ HDF5Writer::HDF5Writer(const std::string& report_name)
     std::tie(collective_list_, independent_list_) = Implementation::prepare_write(report_name,
                                                                                   plist_id);
     // Create hdf5 file named after the report_name
-    const std::string file_name = report_name + ".h5";
+    std::string file_name = report_name + ".h5";
+
+#if defined(HAVE_MPI)
+    // Force MPI to utilize IME driver, instead of POSIX driver with FUSE
+    if (file_name.find("/ime/") == 0) {
+        file_name = "ime://" + file_name.substr(5);
+    }
+#endif
+
     file_ = H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
 
     // Create enum type for the ordering of the spikes
