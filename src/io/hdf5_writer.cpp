@@ -25,7 +25,7 @@ HDF5Writer::HDF5Writer(const std::string& report_name)
     // Create hdf5 file named after the report_name
     std::string file_name = report_name + ".h5";
 
-#if defined(HAVE_MPI)
+#ifdef H5_HAVE_PARALLEL
     // Force MPI to utilize IME driver, instead of POSIX driver with FUSE
     if (file_name.find("/ime/") == 0) {
         file_name = "ime://" + file_name.substr(5);

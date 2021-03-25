@@ -1,11 +1,12 @@
 #include <chrono>
 #include <cmath>
+#include <hdf5.h>
 #include <iostream>
 #include <iterator>
 #include <thread>
 #include <vector>
 
-#ifdef HAVE_MPI
+#ifdef H5_HAVE_PARALLEL
 #include <mpi.h>
 #endif
 
@@ -119,7 +120,7 @@ int main() {
     logger->set_level(spdlog::level::trace);
     int global_rank = 0;
     int global_size = 1;
-#ifdef HAVE_MPI
+#ifdef H5_HAVE_PARALLEL
     MPI_Init(nullptr, nullptr);
     MPI_Comm_rank(MPI_COMM_WORLD, &global_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &global_size);
@@ -203,7 +204,7 @@ int main() {
     }
 
 
-#ifdef HAVE_MPI
+#ifdef H5_HAVE_PARALLEL
     MPI_Finalize();
 #endif
     return 0;

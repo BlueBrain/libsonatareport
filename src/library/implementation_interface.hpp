@@ -10,7 +10,7 @@
 #include "../utils/logger.h"
 #include "sonatareport.h"
 
-#if defined(HAVE_MPI)
+#ifdef H5_HAVE_PARALLEL
 #include <mpi.h>
 #endif
 
@@ -85,7 +85,7 @@ static void local_spikevec_sort(std::vector<double>& isvect,
     std::transform(perm.begin(), perm.end(), osvecg.begin(), [&](uint64_t i) { return isvecg[i]; });
 }
 
-#if defined(HAVE_MPI)
+#ifdef H5_HAVE_PARALLEL
 
 static MPI_Comm get_Comm(const std::string& report_name) {
     if (SonataReport::communicators_.find(report_name) != SonataReport::communicators_.end()) {
@@ -326,7 +326,7 @@ struct SerialImplementation {
 }  // namespace bbp
 
 using Implementation = bbp::sonata::detail::Implementation<
-#if defined(HAVE_MPI)
+#ifdef H5_HAVE_PARALLEL
     bbp::sonata::detail::ParallelImplementation
 #else
     bbp::sonata::detail::SerialImplementation
