@@ -26,9 +26,10 @@ HDF5Writer::HDF5Writer(const std::string& report_name)
     std::string file_name = report_name + ".h5";
 
 #ifdef H5_HAVE_PARALLEL
-    // Force MPI to utilize IME driver, instead of POSIX driver with FUSE
-    if (file_name.find("/ime/") == 0) {
-        file_name = "ime://" + file_name.substr(5);
+    // Ensure MPI utilizes the proper IME driver with the correct path
+    const auto &path_info = IMEUtil::getPathInfo(file_name);
+    if (path_info.first & FSTYPE_IME) {
+        file_name = path_info.second;
     }
 #endif
 

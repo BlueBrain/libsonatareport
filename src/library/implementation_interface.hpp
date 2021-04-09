@@ -7,6 +7,7 @@
 #include <tuple>
 #include <vector>
 
+#include "../utils/imeutil.h"
 #include "../utils/logger.h"
 #include "sonatareport.h"
 
@@ -163,13 +164,12 @@ struct ParallelImplementation {
 
     static void close(){};
     static std::tuple<hid_t, hid_t> prepare_write(const std::string& report_name, hid_t plist_id) {
+        const auto &path_info = IMEUtil::getPathInfo(report_name);
         MPI_Info info = MPI_INFO_NULL;
 
         // Disable MPI-IO optimizations for better IME support
-        if (report_name.find("ime://") == 0 || report_name.find("/ime/") == 0) {
-            MPI_Info_create(&info);
-            MPI_Info_set(info, "romio_cb_write", "disable");
-            MPI_Info_set(info, "romio_ds_write", "disable");
+        if (path_info.first & FSTYPE_IME) {
+            IMEUtil::setMPIHints(info);
         }
 
         // Set the MPI Info object with the hints
