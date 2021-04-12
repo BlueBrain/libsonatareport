@@ -27,7 +27,7 @@ HDF5Writer::HDF5Writer(const std::string& report_name)
 
 #ifdef H5_HAVE_PARALLEL
     // Ensure MPI utilizes the proper IME driver with the correct path
-    const auto &path_info = IMEUtil::getPathInfo(file_name);
+    const auto& path_info = IMEUtil::getPathInfo(file_name);
     if (path_info.first & FSTYPE_IME) {
         file_name = path_info.second;
     }

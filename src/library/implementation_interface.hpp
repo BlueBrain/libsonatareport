@@ -164,7 +164,7 @@ struct ParallelImplementation {
 
     static void close(){};
     static std::tuple<hid_t, hid_t> prepare_write(const std::string& report_name, hid_t plist_id) {
-        const auto &path_info = IMEUtil::getPathInfo(report_name);
+        const auto& path_info = IMEUtil::getPathInfo(report_name);
         MPI_Info info = MPI_INFO_NULL;
 
         // Disable MPI-IO optimizations for better IME support
