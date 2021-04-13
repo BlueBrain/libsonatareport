@@ -6,7 +6,7 @@
 #define IME_CONF_ENV "IM_CLIENT_CFG_FILE"
 #define IME_CONF_PATH "/etc/ddn/ime/ime.conf"
 #define IME_CONF_FUSE_PATH "/etc/ddn/ime/ime-fuse.conf"
-#define FUSE_SUPER_MAGIC 0x65735546
+#define FUSE_SUPER_MAGIC 0x65735546  // https://man7.org/linux/man-pages/man2/fstatfs.2.html
 
 using namespace bbp::sonata;
 
@@ -38,6 +38,14 @@ std::pair<std::string, std::string> getIMEMountPoints() {
         parseFile(std::ifstream(IME_CONF_FUSE_PATH), "MNTDIR", '\''));
 }
 
+/**
+ * Verifies that a given path is under an active FUSE mount point.
+ */
+bool checkFUSEMountPoint(const std::string& path) {
+    struct statfs st;
+    return (statfs(path.c_str(), &st) == 0 && st.f_type == FUSE_SUPER_MAGIC);
+}
+
 std::pair<fstype_t, std::string> IMEUtil::getPathInfo(std::string path) {
     // If the path begins with "ime:", assume native access
     if (path.find("ime:") == 0) {
@@ -56,7 +64,9 @@ std::pair<fstype_t, std::string> IMEUtil::getPathInfo(std::string path) {
 
     // Check if the path contains the IME keyword
     if (path.find("ime") != std::string::npos) {
+        // Parse config. files and verify FUSE mount point only once for performance
         static auto mnt_paths = getIMEMountPoints();
+        static bool ime_fuse_active = checkFUSEMountPoint(mnt_paths.second);
 
         // Check if the path contains the BFS mount point
         if (path.find(mnt_paths.first) == 0) {
@@ -64,9 +74,7 @@ std::pair<fstype_t, std::string> IMEUtil::getPathInfo(std::string path) {
         }
 
         // Lastly, evaluate if the path is under a FUSE mount point
-        struct statfs st;
-        if (path.find(mnt_paths.second) == 0 && statfs(path_orig.c_str(), &st) == 0 &&
-            st.f_type == FUSE_SUPER_MAGIC) {
+        if (ime_fuse_active && path.find(mnt_paths.second) == 0) {
             const off_t offset = mnt_paths.second.size();
             path = IME_PREFIX + mnt_paths.first + path.substr(offset);
             return std::pair<fstype_t, std::string>(FSTYPE_IME_FUSE, path);
