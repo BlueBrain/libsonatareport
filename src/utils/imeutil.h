@@ -13,16 +13,11 @@ namespace sonata {
  * Enum that defines the type of backend filesystem from a path.
  */
 typedef enum {
-    FSTYPE_DEFAULT = 0x6f510ca1,   // Path on the BFS / local storage
+    FSTYPE_DEFAULT = 0x1c16f5,     // Path on the BFS / local storage
     FSTYPE_IME = 0x13e00000,       // Path with "ime:" prefix
     FSTYPE_IME_MNTP = 0x13e00001,  // Path where IME is mounted on the BFS
     FSTYPE_IME_FUSE = 0x13e00002,  // https://man7.org/linux/man-pages/man2/fstatfs.2.html
-    FSTYPE_UNKNOWN = 0xffffffff,   // Error (e.g., file not found)
-    // FSTYPE_GPFS = 0x47504653,       //
-    // https://www.ibm.com/support/knowledgecenter/STXKQY_4.2.2/com.ibm.spectrum.scale.v4r22.doc/bl1adm_admxafg.htm
-    // FSTYPE_LUSTRE = 0x47504653,     //
-    // https://wiki.old.lustre.org/index.php/Architecture_-_Wire_Level_Protocol#Lustre_Messages:_RPC.E2.80.99s
-    // FSTYPE_NVME = 0xef53            // https://man7.org/linux/man-pages/man2/fstatfs.2.html
+    FSTYPE_UNKNOWN = 0xfffff,      // Error (e.g., file not found)
 } fstype_t;
 
 /**
