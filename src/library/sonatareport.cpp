@@ -13,7 +13,7 @@ double SonataReport::atomic_step_ = 1e-8;
 double SonataReport::min_steps_to_record_ = 0.0;
 bool SonataReport::first_report = true;
 int SonataReport::rank_ = 0;
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
 MPI_Comm SonataReport::has_nodes_ = MPI_COMM_WORLD;
 SonataReport::communicators_t SonataReport::communicators_;
 #endif

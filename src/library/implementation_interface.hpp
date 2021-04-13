@@ -11,7 +11,7 @@
 #include "../utils/logger.h"
 #include "sonatareport.h"
 
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
 #include <mpi.h>
 #endif
 
@@ -86,7 +86,7 @@ static void local_spikevec_sort(std::vector<double>& isvect,
     std::transform(perm.begin(), perm.end(), osvecg.begin(), [&](uint64_t i) { return isvecg[i]; });
 }
 
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
 
 static MPI_Comm get_Comm(const std::string& report_name) {
     if (SonataReport::communicators_.find(report_name) != SonataReport::communicators_.end()) {
@@ -167,7 +167,7 @@ struct ParallelImplementation {
         const auto& path_info = IMEUtil::getPathInfo(report_name);
         MPI_Info info = MPI_INFO_NULL;
 
-        // Disable MPI-IO optimizations for better IME support
+        // Set proper MPI-IO hints for better IME support
         if (path_info.first & FSTYPE_IME) {
             IMEUtil::setMPIHints(info);
         }
@@ -326,7 +326,7 @@ struct SerialImplementation {
 }  // namespace bbp
 
 using Implementation = bbp::sonata::detail::Implementation<
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
     bbp::sonata::detail::ParallelImplementation
 #else
     bbp::sonata::detail::SerialImplementation

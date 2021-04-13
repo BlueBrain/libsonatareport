@@ -82,6 +82,7 @@ if(SONATA_REPORT_ENABLE_MPI)
         if (HDF5_FOUND)
             if (HDF5_IS_PARALLEL)
                 set(SONATA_REPORT_HAVE_MPI TRUE) # For integration tests
+                add_definitions(-DSONATA_REPORT_HAVE_MPI)
                 message(STATUS "Both MPI and HDF5 parallel found, using reporting parallel implementation")
             else()
                 message(STATUS "MPI and HDF5 found, but no parallel IO support for HDF5, using reporting serial implementation")

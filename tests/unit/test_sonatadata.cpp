@@ -1,10 +1,9 @@
 #include <bbp/sonata/reports.h>
 #include <catch2/catch.hpp>
 #include <data/sonata_data.h>
-#include <hdf5.h>
 #include <iostream>
 #include <memory>
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
 #include <mpi.h>
 #endif
 

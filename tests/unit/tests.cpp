@@ -1,17 +1,16 @@
 #define CATCH_CONFIG_RUNNER
 #include <catch2/catch.hpp>
-#include <hdf5.h>
 
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
 #include <mpi.h>
 #endif
 
 int main(int argc, char* argv[]) {
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
     MPI_Init(nullptr, nullptr);
 #endif
     int result = Catch::Session().run(argc, argv);
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
     MPI_Finalize();
 #endif
     return result;

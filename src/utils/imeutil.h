@@ -1,8 +1,7 @@
 #pragma once
 
 #include <fstream>
-#include <hdf5.h>
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
 #include <mpi.h>
 #endif
 
@@ -41,7 +40,7 @@ class IMEUtil
      */
     static std::string getFSTypeString(const fstype_t type);
 
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
     /**
      * Defines the MPI Hints necessary to use IME efficiently with MPI-IO.
      * \param info MPI Info object to be created / updated.

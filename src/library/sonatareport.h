@@ -1,11 +1,10 @@
 #pragma once
-#include <hdf5.h>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
 #include <mpi.h>
 #endif
 
@@ -20,13 +19,13 @@ namespace sonata {
 class SonataReport
 {
     using reports_t = std::unordered_map<std::string, std::shared_ptr<Report>>;
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
     using communicators_t = std::unordered_map<std::string, MPI_Comm>;
 #endif
   public:
     static double atomic_step_;
     static double min_steps_to_record_;
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
     static MPI_Comm has_nodes_;
     static communicators_t communicators_;
 #endif

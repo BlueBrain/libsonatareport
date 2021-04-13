@@ -92,7 +92,7 @@ std::string IMEUtil::getFSTypeString(const fstype_t type) {
     }
 }
 
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
 int IMEUtil::setMPIHints(MPI_Info& info) {
     int status = MPI_SUCCESS;
 

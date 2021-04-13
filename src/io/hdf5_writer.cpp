@@ -25,7 +25,7 @@ HDF5Writer::HDF5Writer(const std::string& report_name)
     // Create hdf5 file named after the report_name
     std::string file_name = report_name + ".h5";
 
-#ifdef H5_HAVE_PARALLEL
+#ifdef SONATA_REPORT_HAVE_MPI
     // Ensure MPI utilizes the proper IME driver with the correct path
     const auto& path_info = IMEUtil::getPathInfo(file_name);
     if (path_info.first & FSTYPE_IME) {
