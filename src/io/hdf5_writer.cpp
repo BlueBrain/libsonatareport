@@ -19,19 +19,10 @@ template void HDF5Writer::write<double>(const std::string& dataset_name,
 
 HDF5Writer::HDF5Writer(const std::string& report_name)
     : report_name_(report_name) {
-    hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
-    std::tie(collective_list_, independent_list_) = Implementation::prepare_write(report_name,
-                                                                                  plist_id);
-    // Create hdf5 file named after the report_name
-    std::string file_name = report_name + ".h5";
-
-#ifdef SONATA_REPORT_HAVE_MPI
-    // Ensure MPI utilizes the proper IME driver with the correct path
-    const auto& path_info = IMEUtil::getPathInfo(file_name);
-    if (path_info.first & FSTYPE_IME) {
-        file_name = path_info.second;
-    }
-#endif
+    hid_t plist_id;
+    std::string file_name;
+    std::tie(plist_id, collective_list_, independent_list_, file_name) =
+        Implementation::prepare_write(report_name);
 
     file_ = H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
 

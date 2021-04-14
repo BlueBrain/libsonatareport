@@ -1,6 +1,8 @@
 #include "imeutil.h"
 #include <limits.h>
+#ifdef SONATA_REPORT_CHECK_IME
 #include <sys/vfs.h>
+#endif
 
 #define IME_PREFIX "ime://"
 #define IME_CONF_ENV "IM_CLIENT_CFG_FILE"
@@ -10,6 +12,7 @@
 
 using namespace bbp::sonata;
 
+#ifdef SONATA_REPORT_CHECK_IME
 /**
  * Parses the IME config. files to determine the BFS and FUSE mount points.
  */
@@ -30,7 +33,7 @@ std::pair<std::string, std::string> getIMEMountPoints() {
                 }
             }
         }
-        return "";
+        return ":Error:-1:";
     };
 
     return std::pair<std::string, std::string>(
@@ -41,12 +44,14 @@ std::pair<std::string, std::string> getIMEMountPoints() {
 /**
  * Verifies that a given path is under an active FUSE mount point.
  */
-bool checkFUSEMountPoint(const std::string& path) {
+bool isFUSEMountPoint(const std::string& path) {
     struct statfs st;
     return (statfs(path.c_str(), &st) == 0 && st.f_type == FUSE_SUPER_MAGIC);
 }
+#endif
 
 std::pair<fstype_t, std::string> IMEUtil::getPathInfo(std::string path) {
+#ifdef SONATA_REPORT_CHECK_IME
     // If the path begins with "ime:", assume native access
     if (path.find("ime:") == 0) {
         return std::pair<fstype_t, std::string>(FSTYPE_IME, path);
@@ -54,50 +59,37 @@ std::pair<fstype_t, std::string> IMEUtil::getPathInfo(std::string path) {
 
     // Resolve the full path and return an error if not possible (e.g., file,
     // original parent folder, or both do not exist yet)
-    const auto limit = path.find_last_of('/');
-    auto path_orig = (limit != std::string::npos) ? path.substr(0, limit) : ".";
-    char full_path[PATH_MAX];
-    if (realpath(path_orig.c_str(), full_path) == NULL) {
-        return std::pair<fstype_t, std::string>(FSTYPE_UNKNOWN, path);
+    if (path[0] != '/') {
+        const auto limit = path.find_last_of('/');
+        auto path_orig = (limit != std::string::npos) ? path.substr(0, limit) : ".";
+        char full_path[PATH_MAX];
+        if (realpath(path_orig.c_str(), full_path) == NULL) {
+            return std::pair<fstype_t, std::string>(FSTYPE_UNKNOWN, path);
+        }
+        path = std::string(full_path) + "/" + path.substr((limit != std::string::npos) ? limit : 0);
     }
-    path = std::string(full_path) + "/" + path.substr((limit != std::string::npos) ? limit : 0);
 
     // Check if the path contains the IME keyword
-    if (path.find("ime") != std::string::npos) {
+    if (path.find("/ime/") != std::string::npos) {
         // Parse config. files and verify FUSE mount point only once for performance
         static auto mnt_paths = getIMEMountPoints();
-        static bool ime_fuse_active = checkFUSEMountPoint(mnt_paths.second);
+        static bool ime_fuse_active = isFUSEMountPoint(mnt_paths.second);
 
         // Check if the path contains the BFS mount point
         if (path.find(mnt_paths.first) == 0) {
-            return std::pair<fstype_t, std::string>(FSTYPE_IME_MNTP, IME_PREFIX + path);
+            return std::pair<fstype_t, std::string>(FSTYPE_IME, IME_PREFIX + path);
         }
 
         // Lastly, evaluate if the path is under a FUSE mount point
         if (ime_fuse_active && path.find(mnt_paths.second) == 0) {
             const off_t offset = mnt_paths.second.size();
             path = IME_PREFIX + mnt_paths.first + path.substr(offset);
-            return std::pair<fstype_t, std::string>(FSTYPE_IME_FUSE, path);
+            return std::pair<fstype_t, std::string>(FSTYPE_IME, path);
         }
     }
-
+#endif
     // At this point, assume a traditional file system
     return std::pair<fstype_t, std::string>(FSTYPE_DEFAULT, path);
-}
-
-std::string IMEUtil::getFSTypeString(const fstype_t type) {
-    switch (type) {
-    case FSTYPE_IME:
-        return "IME (Native)";
-    case FSTYPE_IME_MNTP:
-        return "IME (BFS Mount Point)";
-    case FSTYPE_IME_FUSE:
-        return "IME (FUSE)";
-    case FSTYPE_DEFAULT:
-        return "BFS / Local Disk";
-    default:
-        return "Error";
-    }
 }
 
 #ifdef SONATA_REPORT_HAVE_MPI

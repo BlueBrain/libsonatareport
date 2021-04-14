@@ -12,11 +12,9 @@ namespace sonata {
  * Enum that defines the type of backend filesystem from a path.
  */
 typedef enum {
-    FSTYPE_DEFAULT = 0x1c16f5,     // Path on the BFS / local storage
-    FSTYPE_IME = 0x13e00000,       // Path with "ime:" prefix
-    FSTYPE_IME_MNTP = 0x13e00001,  // Path where IME is mounted on the BFS
-    FSTYPE_IME_FUSE = 0x13e00002,  // Path of the FUSE mount point of IME
-    FSTYPE_UNKNOWN = 0xfffff,      // Error (e.g., file not found)
+    FSTYPE_DEFAULT = 0x6f510ca1,  // Path on the BFS / local storage
+    FSTYPE_IME = 0x13e00000,      // Path with "ime:" prefix
+    FSTYPE_UNKNOWN = 0xffffffff,  // Error (e.g., file not found)
 } fstype_t;
 
 /**
@@ -32,13 +30,6 @@ class IMEUtil
      * \return Filesystem type and optimal path for IME.
      */
     static std::pair<fstype_t, std::string> getPathInfo(std::string path);
-
-    /**
-     * Converts a filesystem type to the equivalent string.
-     * \param type Filesystem type.
-     * \return Equivalent string to the type.
-     */
-    static std::string getFSTypeString(const fstype_t type);
 
 #ifdef SONATA_REPORT_HAVE_MPI
     /**

@@ -66,6 +66,10 @@ else()
   set(SONATA_REPORT_COMPILE_OPTIONS -Wall -Wextra -pedantic)
 endif()
 
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+  add_definitions(-DSONATA_REPORT_CHECK_IME)
+endif()
+
 # =============================================================================
 # Dependencies
 # =============================================================================
