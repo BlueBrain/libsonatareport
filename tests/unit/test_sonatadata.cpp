@@ -1,9 +1,9 @@
 #include <bbp/sonata/reports.h>
 #include <catch2/catch.hpp>
+#include <data/sonata_data.h>
 #include <iostream>
 #include <memory>
-#include <data/sonata_data.h>
-#ifdef HAVE_MPI
+#ifdef SONATA_REPORT_HAVE_MPI
 #include <mpi.h>
 #endif
 

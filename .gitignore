@@ -4,3 +4,6 @@ build
 libsonata.cpython-*.so
 python/__pycache__/
 *.pyc
+spack-*
+.vscode/
+venv-clang-format/

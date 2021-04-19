@@ -9,6 +9,7 @@ set(sonatareport_SOURCES
     "data/sonata_data.cpp"
     "io/hdf5_writer.cpp"
     "utils/logger.cpp"
+    "utils/imeutil.cpp"
     )
 
 # Shared library

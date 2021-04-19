@@ -66,6 +66,10 @@ else()
   set(SONATA_REPORT_COMPILE_OPTIONS -Wall -Wextra -pedantic)
 endif()
 
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+  add_definitions(-DSONATA_REPORT_CHECK_IME)
+endif()
+
 # =============================================================================
 # Dependencies
 # =============================================================================
@@ -81,9 +85,8 @@ if(SONATA_REPORT_ENABLE_MPI)
     if (MPI_FOUND)
         if (HDF5_FOUND)
             if (HDF5_IS_PARALLEL)
-                set(HAVE_MPI TRUE)
-                # When MPI and HDF5 parallel are found, enable mpi in the report library
-                add_definitions(-DHAVE_MPI)
+                set(SONATA_REPORT_HAVE_MPI TRUE) # For integration tests
+                add_definitions(-DSONATA_REPORT_HAVE_MPI)
                 message(STATUS "Both MPI and HDF5 parallel found, using reporting parallel implementation")
             else()
                 message(STATUS "MPI and HDF5 found, but no parallel IO support for HDF5, using reporting serial implementation")

@@ -7,10 +7,11 @@
 #include <tuple>
 #include <vector>
 
+#include "../utils/imeutil.h"
 #include "../utils/logger.h"
 #include "sonatareport.h"
 
-#if defined(HAVE_MPI)
+#ifdef SONATA_REPORT_HAVE_MPI
 #include <mpi.h>
 #endif
 
@@ -18,6 +19,8 @@
 namespace bbp {
 namespace sonata {
 namespace detail {
+
+#define FILE_EXTENSION ".h5"
 
 template <class TImpl>
 struct Implementation {
@@ -27,8 +30,9 @@ struct Implementation {
     static void close() {
         TImpl::close();
     }
-    static std::tuple<hid_t, hid_t> prepare_write(const std::string& report_name, hid_t plist_id) {
-        return TImpl::prepare_write(report_name, plist_id);
+    static std::tuple<hid_t, hid_t, hid_t, std::string> prepare_write(
+        const std::string& report_name) {
+        return TImpl::prepare_write(report_name);
     }
     static hsize_t get_offset(const std::string& report_name, hsize_t value) {
         return TImpl::get_offset(report_name, value);
@@ -85,7 +89,7 @@ static void local_spikevec_sort(std::vector<double>& isvect,
     std::transform(perm.begin(), perm.end(), osvecg.begin(), [&](uint64_t i) { return isvecg[i]; });
 }
 
-#if defined(HAVE_MPI)
+#ifdef SONATA_REPORT_HAVE_MPI
 
 static MPI_Comm get_Comm(const std::string& report_name) {
     if (SonataReport::communicators_.find(report_name) != SonataReport::communicators_.end()) {
@@ -162,9 +166,18 @@ struct ParallelImplementation {
     };
 
     static void close(){};
-    static std::tuple<hid_t, hid_t> prepare_write(const std::string& report_name, hid_t plist_id) {
-        // Enable MPI access
+    static std::tuple<hid_t, hid_t, hid_t, std::string> prepare_write(
+        const std::string& report_name) {
+        const auto& path_info = IMEUtil::getPathInfo(report_name + FILE_EXTENSION);
         MPI_Info info = MPI_INFO_NULL;
+
+        // Set proper MPI-IO hints for better IME support
+        if (path_info.first == FSTYPE_IME) {
+            IMEUtil::setMPIHints(info);
+        }
+
+        // Set the MPI Info object with the hints
+        hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
         H5Pset_fapl_mpio(plist_id, get_Comm(report_name), info);
 
         // Initialize independent/collective lists
@@ -173,7 +186,7 @@ struct ParallelImplementation {
         H5Pset_dxpl_mpio(collective_list, H5FD_MPIO_COLLECTIVE);
         H5Pset_dxpl_mpio(independent_list, H5FD_MPIO_INDEPENDENT);
 
-        return std::make_tuple(collective_list, independent_list);
+        return std::make_tuple(plist_id, collective_list, independent_list, path_info.second);
     };
 
     static hsize_t get_offset(const std::string& report_name, hsize_t value) {
@@ -286,9 +299,12 @@ struct SerialImplementation {
         return 0;
     };
     static void close(){};
-    static std::tuple<hid_t, hid_t> prepare_write(const std::string& /*report_name*/,
-                                                  hid_t /*plist_id*/) {
-        return std::make_tuple(H5Pcreate(H5P_DATASET_XFER), H5Pcreate(H5P_DATASET_XFER));
+    static std::tuple<hid_t, hid_t, hid_t, std::string> prepare_write(
+        const std::string& report_name) {
+        return std::make_tuple(H5Pcreate(H5P_FILE_ACCESS),
+                               H5Pcreate(H5P_DATASET_XFER),
+                               H5Pcreate(H5P_DATASET_XFER),
+                               report_name + FILE_EXTENSION);
     }
     static hsize_t get_offset(const std::string& /*report_name*/, hsize_t /*value*/) {
         return 0;
@@ -318,7 +334,7 @@ struct SerialImplementation {
 }  // namespace bbp
 
 using Implementation = bbp::sonata::detail::Implementation<
-#if defined(HAVE_MPI)
+#ifdef SONATA_REPORT_HAVE_MPI
     bbp::sonata::detail::ParallelImplementation
 #else
     bbp::sonata::detail::SerialImplementation
