@@ -31,7 +31,7 @@ class Report
      */
     int prepare_dataset();
 
-    virtual void add_node(const std::string& population_name, uint64_t node_id);
+    virtual void add_node(const std::string& population_name,  uint64_t population_offset, uint64_t node_id);
     bool node_exists(const std::string& population_name, uint64_t node_id) const;
     bool population_exists(const std::string& population_name) const;
     std::shared_ptr<Node> get_node(const std::string& population_name, uint64_t node_id) const;
@@ -47,6 +47,7 @@ class Report
   protected:
     using populations_t = std::map<std::string, std::shared_ptr<nodes_t>>;
     std::shared_ptr<populations_t> populations_;
+    std::map<std::string, uint64_t> population_offsets_;
     std::vector<std::shared_ptr<SonataData>> sonata_populations_;
 
   private:

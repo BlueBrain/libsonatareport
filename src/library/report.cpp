@@ -25,7 +25,7 @@ Report::Report(const std::string& report_name, double tstart, double tend, doubl
     num_steps_ = static_cast<int>(std::ceil(sim_steps));
 }
 
-void Report::add_node(const std::string& population_name, uint64_t node_id) {
+void Report::add_node(const std::string& population_name, uint64_t population_offset, uint64_t node_id) {
     if (population_exists(population_name)) {
         if (node_exists(population_name, node_id)) {
             throw std::runtime_error("Warning: attempted to add node " + std::to_string(node_id) +
@@ -38,6 +38,7 @@ void Report::add_node(const std::string& population_name, uint64_t node_id) {
         std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>();
         nodes->emplace(node_id, std::make_shared<Node>(node_id));
         populations_->emplace(population_name, nodes);
+        population_offsets_.emplace(population_name, population_offset);
     }
 }
 
@@ -59,6 +60,7 @@ int Report::prepare_dataset() {
         std::shared_ptr<nodes_t> nodes = population.second;
         sonata_populations_.push_back(std::make_unique<SonataData>(report_name_,
                                                                    population.first,
+                                                                   population_offsets_[population.first],
                                                                    max_buffer_size_,
                                                                    num_steps_,
                                                                    dt_,

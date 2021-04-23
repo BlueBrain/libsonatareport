@@ -11,6 +11,7 @@ namespace sonata {
 
 SonataData::SonataData(const std::string& report_name,
                        const std::string& population_name,
+                       uint64_t population_offset,
                        size_t max_buffer_size,
                        int num_steps,
                        double dt,
@@ -19,6 +20,7 @@ SonataData::SonataData(const std::string& report_name,
                        std::shared_ptr<nodes_t> nodes)
     : report_name_(report_name)
     , population_name_(population_name)
+    , population_offset_(population_offset)
     , num_steps_(num_steps)
     , hdf5_writer_(std::make_unique<HDF5Writer>(report_name))
     , nodes_(nodes) {
@@ -37,6 +39,7 @@ SonataData::SonataData(const std::string& report_name,
                        const std::vector<uint64_t>& spike_node_ids)
     : report_name_(report_name)
     , population_name_(population_name.empty() ? "All" : population_name)
+    , population_offset_(0)
     , spike_timestamps_(spike_timestamps)
     , spike_node_ids_(spike_node_ids)
     , hdf5_writer_(std::make_unique<HDF5Writer>(report_name)) {}
@@ -229,10 +232,10 @@ void SonataData::prepare_dataset() {
 
 void SonataData::convert_gids_to_sonata(std::vector<uint64_t>& node_ids) {
     if (getenv("LIBSONATA_ZERO_BASED_GIDS") == nullptr) {
-        std::transform(std::begin(node_ids), std::end(node_ids), std::begin(node_ids), [](int x) {
+        std::transform(std::begin(node_ids), std::end(node_ids), std::begin(node_ids), [&population_offset_ = population_offset_](int x) {
             // Fail if node_id is 0 and input data is reported as 1-based
             assert(x);
-            return x - 1;
+            return x - population_offset_ - 1;
         });
     }
 }

@@ -13,6 +13,7 @@ class SonataData
   public:
     SonataData(const std::string& report_name,
                const std::string& population_name,
+               uint64_t population_offset,
                size_t max_buffer_size,
                int num_steps,
                double dt,
@@ -59,6 +60,7 @@ class SonataData
   private:
     std::string report_name_;
     std::string population_name_;
+    uint64_t population_offset_;
     std::vector<float> report_buffer_;
     uint32_t total_elements_ = 0;
     uint32_t num_steps_ = 0;

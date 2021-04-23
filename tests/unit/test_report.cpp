@@ -8,6 +8,7 @@
 using namespace bbp::sonata;
 
 static const std::string population_name = "All";
+static const uint64_t population_offset = 0;
 
 SCENARIO("Test Report class", "[Report]") {
     uint32_t soma_id = 42;
@@ -23,7 +24,7 @@ SCENARIO("Test Report class", "[Report]") {
             REQUIRE(soma_report->get_num_steps() == 34);
         }
         WHEN("We add a node and a variable to a soma report") {
-            soma_report->add_node(population_name, 1);
+            soma_report->add_node(population_name, population_offset, 1);
             double element_value = 10;
             std::shared_ptr<Node> node = soma_report->get_node(population_name, 1);
             node->add_element(&element_value, soma_id);
@@ -36,7 +37,7 @@ SCENARIO("Test Report class", "[Report]") {
             }
         }
         WHEN("We add 2 elements to a given node in a soma report") {
-            soma_report->add_node(population_name, 1);
+            soma_report->add_node(population_name, population_offset, 1);
             double element_value = 42;
             soma_report->get_node(population_name, 1)->add_element(&element_value, soma_id);
             REQUIRE_THROWS(
@@ -47,8 +48,8 @@ SCENARIO("Test Report class", "[Report]") {
             }
         }
         WHEN("We add the same node twice in the same population") {
-            soma_report->add_node(population_name, 1);
-            REQUIRE_THROWS(soma_report->add_node(population_name, 1));
+            soma_report->add_node(population_name, population_offset, 1);
+            REQUIRE_THROWS(soma_report->add_node(population_name, population_offset, 1));
             THEN("Number of nodes is 1") {
                 REQUIRE(soma_report->get_num_nodes(population_name) == 1);
             }
@@ -65,24 +66,24 @@ SCENARIO("Test Report class", "[Report]") {
             REQUIRE(element_report->get_num_steps() == 10);
         }
         WHEN("We add 2 nodes") {
-            element_report->add_node(population_name, 1);
-            element_report->add_node(population_name, 2);
+            element_report->add_node(population_name, population_offset, 1);
+            element_report->add_node(population_name, population_offset, 2);
 
             THEN("Number of nodes is 2") {
                 REQUIRE(element_report->get_num_nodes(population_name) == 2);
             }
         }
         WHEN("We add the same node twice") {
-            element_report->add_node(population_name, 1);
-            REQUIRE_THROWS(element_report->add_node(population_name, 1));
+            element_report->add_node(population_name, population_offset, 1);
+            REQUIRE_THROWS(element_report->add_node(population_name, population_offset, 1));
             THEN("Number of nodes is 1") {
                 REQUIRE(element_report->get_num_nodes(population_name) == 1);
             }
         }
 
         WHEN("We add 10 elements") {
-            element_report->add_node(population_name, 1);
-            element_report->add_node(population_name, 2);
+            element_report->add_node(population_name, population_offset, 1);
+            element_report->add_node(population_name, population_offset, 2);
             double element_value = 10;
             element_report->get_node(population_name, 1)->add_element(&element_value, element_id);
 
