@@ -157,7 +157,14 @@ int main() {
     const char* population_name = "All";
     uint64_t population_offset = 0;
 
-    init(element_report, population_name, population_offset, tstart, tstop, dt, element_neurons, "compartment");
+    init(element_report,
+         population_name,
+         population_offset,
+         tstart,
+         tstop,
+         dt,
+         element_neurons,
+         "compartment");
     init(soma_report, population_name, population_offset, tstart, tstop, dt, soma_neurons, "soma");
     sonata_set_max_buffer_size_hint(20);
     sonata_set_atomic_step(dt);

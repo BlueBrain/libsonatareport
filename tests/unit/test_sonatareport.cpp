@@ -78,7 +78,8 @@ SCENARIO("Test SonataReport API", "[sonatareport]") {
         int nodeids[2] = {1, 2};
         THEN("Number of reports is still 2 and returns error") {
             REQUIRE(sonata_get_num_reports() == 2);
-            REQUIRE(sonata_add_node(weird_report_name, population_name, population_offset, 1) == -2);
+            REQUIRE(sonata_add_node(weird_report_name, population_name, population_offset, 1) ==
+                    -2);
             REQUIRE(sonata_add_element(
                         weird_report_name, population_name, 1, element_id, &soma_value) == -2);
             REQUIRE(sonata_set_report_max_buffer_size_hint(weird_report_name, 1) == -1);

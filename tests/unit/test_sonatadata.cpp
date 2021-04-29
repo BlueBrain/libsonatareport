@@ -37,7 +37,9 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
         }
         WHEN("We record some data and prepare the dataset for a big enough max buffer size") {
             std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>(
-                std::initializer_list<nodes_t::value_type>{{101, node}, {102, node2}, {142, node42}});
+                std::initializer_list<nodes_t::value_type>{{101, node},
+                                                           {102, node2},
+                                                           {142, node42}});
 
             int num_steps = 3;
             size_t max_buffer_size = 1024;
@@ -96,7 +98,9 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
         }
         WHEN("We record some other data and prepare the dataset for a small max buffer size") {
             std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>(
-                std::initializer_list<nodes_t::value_type>{{101, node}, {102, node2}, {142, node42}});
+                std::initializer_list<nodes_t::value_type>{{101, node},
+                                                           {102, node2},
+                                                           {142, node42}});
             int num_steps = 3;
             size_t max_buffer_size = 128;
             std::unique_ptr<SonataData> sonata2 = std::make_unique<SonataData>("test_sonatadata2",

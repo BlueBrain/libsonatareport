@@ -36,7 +36,10 @@ int sonata_create_report(const char* report_name,
  * \return 0 if operator succeeded, -2 if the report doesn't exist, -1 if the node_id already
  * exists.
  */
-int sonata_add_node(const char* report_name, const char* population_name, uint64_t population_offset, uint64_t node_id);
+int sonata_add_node(const char* report_name,
+                    const char* population_name,
+                    uint64_t population_offset,
+                    uint64_t node_id);
 
 /**
  * \brief Add an element value to an existing node on a report

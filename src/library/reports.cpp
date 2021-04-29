@@ -23,7 +23,10 @@ int sonata_create_report(
     return 0;
 }
 
-int sonata_add_node(const char* report_name, const char* population_name, uint64_t population_offset, uint64_t node_id) {
+int sonata_add_node(const char* report_name,
+                    const char* population_name,
+                    uint64_t population_offset,
+                    uint64_t node_id) {
     if (!sonata_report.report_exists(report_name)) {
         return -2;
     }

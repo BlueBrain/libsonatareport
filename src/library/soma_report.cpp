@@ -7,7 +7,9 @@
 namespace bbp {
 namespace sonata {
 
-void SomaReport::add_node(const std::string& population_name, uint64_t population_offset, uint64_t node_id) {
+void SomaReport::add_node(const std::string& population_name,
+                          uint64_t population_offset,
+                          uint64_t node_id) {
     if (population_exists(population_name)) {
         if (node_exists(population_name, node_id)) {
             throw std::runtime_error("Warning: attempted to add node " + std::to_string(node_id) +
