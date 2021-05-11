@@ -78,6 +78,7 @@ std::vector<uint64_t> generate_data(std::vector<Neuron>& neurons,
 
 void init(const char* report_name,
           const char* population_name,
+          uint64_t population_offset,
           double tstart,
           double tstop,
           double dt,
@@ -86,7 +87,7 @@ void init(const char* report_name,
     // logic for registering soma and element reports with reportinglib
     sonata_create_report(report_name, tstart, tstop, dt, kind.c_str());
     for (auto& neuron : neurons) {
-        sonata_add_node(report_name, population_name, neuron.node_id);
+        sonata_add_node(report_name, population_name, population_offset, neuron.node_id);
         int element_id = neuron.node_id * 1000;
 
         for (auto& element : neuron.voltages) {
@@ -154,9 +155,17 @@ int main() {
     const char* element_report = "compartment_report";
     const char* soma_report = "soma_report";
     const char* population_name = "All";
+    uint64_t population_offset = 0;
 
-    init(element_report, population_name, tstart, tstop, dt, element_neurons, "compartment");
-    init(soma_report, population_name, tstart, tstop, dt, soma_neurons, "soma");
+    init(element_report,
+         population_name,
+         population_offset,
+         tstart,
+         tstop,
+         dt,
+         element_neurons,
+         "compartment");
+    init(soma_report, population_name, population_offset, tstart, tstop, dt, soma_neurons, "soma");
     sonata_set_max_buffer_size_hint(20);
     sonata_set_atomic_step(dt);
 
