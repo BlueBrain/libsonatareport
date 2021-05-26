@@ -168,12 +168,12 @@ struct ParallelImplementation {
     static void close(){};
     static std::tuple<hid_t, hid_t, hid_t, std::string> prepare_write(
         const std::string& report_name) {
-        const auto& path_info = IMEUtil::getPathInfo(report_name + FILE_EXTENSION);
+        const auto& path_info = IMEUtil::get_path_info(report_name + FILE_EXTENSION);
         MPI_Info info = MPI_INFO_NULL;
 
         // Set proper MPI-IO hints for better IME support
         if (path_info.first == FSTYPE_IME) {
-            IMEUtil::setMPIHints(info);
+            IMEUtil::set_mpi_hints(info);
         }
 
         // Set the MPI Info object with the hints

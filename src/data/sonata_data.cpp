@@ -184,12 +184,13 @@ void SonataData::check_and_write(double timestep) {
     if (current_step_ == steps_to_write_ || current_step_ == remaining_steps_ ||
         steps_recorded_ > 1) {
         if (SonataReport::rank_ == 0) {
-            logger->trace(
-                "Writing to file {}! steps_to_write={}, current_step={}, remaining_steps={}",
+            logger->debug(
+                "Writing to file {}! steps_to_write={}, current_step={}, remaining_steps={} steps_recorded={}",
                 report_name_,
                 steps_to_write_,
                 current_step_,
-                remaining_steps_);
+                remaining_steps_,
+                steps_recorded_);
         }
         write_data();
     }
