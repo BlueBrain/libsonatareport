@@ -1,6 +1,6 @@
+#include "logger.h"
 #include <memory>
 #include <stdlib.h>
-#include "logger.h"
 
 /**
  * \brief Logger implementation based on spdlog
