@@ -89,7 +89,9 @@ void SonataData::prepare_buffer(size_t max_buffer_size) {
     report_buffer_.resize(buffer_size);
 
     if (SonataReport::rank_ == 0) {
-        logger->debug("-Buffer size: {}", buffer_size);
+        logger->debug("-Buffer size: {} (count={})",
+                      buffer_size * sizeof(report_buffer_[0]),
+                      buffer_size);
     }
 }
 
