@@ -50,7 +50,7 @@ bool isFUSEMountPoint(const std::string& path) {
 }
 #endif
 
-std::pair<fstype_t, std::string> IMEUtil::getPathInfo(std::string path) {
+std::pair<fstype_t, std::string> IMEUtil::get_path_info(std::string path) {
 #ifdef SONATA_REPORT_CHECK_IME
     // If the path begins with "ime:", assume native access
     if (path.find("ime:") == 0) {
@@ -93,7 +93,7 @@ std::pair<fstype_t, std::string> IMEUtil::getPathInfo(std::string path) {
 }
 
 #ifdef SONATA_REPORT_HAVE_MPI
-int IMEUtil::setMPIHints(MPI_Info& info) {
+int IMEUtil::set_mpi_hints(MPI_Info& info) {
     int status = MPI_SUCCESS;
 
     // Create the MPI Info objects, if needed

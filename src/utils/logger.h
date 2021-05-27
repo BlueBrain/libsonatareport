@@ -4,6 +4,7 @@
  * \brief Implement logger based on spdlog library
  */
 
+#include "spdlog/cfg/env.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 

@@ -20,7 +20,7 @@ SonataReport::communicators_t SonataReport::communicators_;
 
 void SonataReport::clear() {
     for (auto& kv : reports_) {
-        logger->debug("Deleting report: {} from rank {}", kv.first, SonataReport::rank_);
+        logger->trace("Deleting report: {} from rank {}", kv.first, SonataReport::rank_);
     }
     reports_.clear();
 }
@@ -38,7 +38,7 @@ std::shared_ptr<Report> SonataReport::create_report(
     } else {
         throw std::runtime_error("Kind '" + kind + "' doesn't exist!");
     }
-    logger->debug("Creating report {} type {} tstart {} and tstop {} from rank {}",
+    logger->trace("Creating report {} type {} tstart {} and tstop {} from rank {}",
                   name,
                   kind,
                   tstart,
@@ -77,7 +77,7 @@ void SonataReport::create_communicators() {
 
 void SonataReport::prepare_datasets() {
     for (auto& kv : reports_) {
-        logger->debug("Preparing datasets of report {} from rank {}", kv.first, rank_);
+        logger->trace("Preparing datasets of report {} from rank {}", kv.first, rank_);
         kv.second->prepare_dataset();
     }
 }

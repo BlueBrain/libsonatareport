@@ -29,7 +29,7 @@ class IMEUtil
      * \param path Path to the file or folder.
      * \return Filesystem type and optimal path for IME.
      */
-    static std::pair<fstype_t, std::string> getPathInfo(std::string path);
+    static std::pair<fstype_t, std::string> get_path_info(std::string path);
 
 #ifdef SONATA_REPORT_HAVE_MPI
     /**
@@ -37,7 +37,7 @@ class IMEUtil
      * \param info MPI Info object to be created / updated.
      * \return MPI_SUCCESS if successful, or an MPI-based error.
      */
-    static int setMPIHints(MPI_Info& info);
+    static int set_mpi_hints(MPI_Info& info);
 #endif
   private:
     IMEUtil() {}

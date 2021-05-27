@@ -24,6 +24,10 @@ HDF5Writer::HDF5Writer(const std::string& report_name)
     std::tie(plist_id, collective_list_, independent_list_, file_name) =
         Implementation::prepare_write(report_name);
 
+    if (SonataReport::rank_ == 0) {
+        logger->debug("Creating file '{}'", file_name);
+    }
+
     file_ = H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
 
     // Create enum type for the ordering of the spikes
