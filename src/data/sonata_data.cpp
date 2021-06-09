@@ -21,9 +21,9 @@ SonataData::SonataData(const std::string& report_name,
                        std::shared_ptr<nodes_t> nodes)
     : report_name_(report_name)
     , population_name_(population_name)
+    , report_units_(units)
     , population_offset_(population_offset)
     , num_steps_(num_steps)
-    , report_units_(units)
     , hdf5_writer_(std::make_unique<HDF5Writer>(report_name))
     , nodes_(nodes) {
     prepare_buffer(max_buffer_size);
