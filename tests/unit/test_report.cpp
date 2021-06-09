@@ -1,13 +1,14 @@
 #include <array>
 #include <catch2/catch.hpp>
-#include <memory>
 #include <library/element_report.h>
 #include <library/report.h>
 #include <library/soma_report.h>
+#include <memory>
 
 using namespace bbp::sonata;
 
 static const std::string population_name = "All";
+static const std::string report_units = "mV";
 static const uint64_t population_offset = 0;
 
 SCENARIO("Test Report class", "[Report]") {
@@ -18,7 +19,7 @@ SCENARIO("Test Report class", "[Report]") {
         const double tend = 10.0;
         const double dt = 0.3;
         std::shared_ptr<Report> soma_report =
-            std::make_shared<SomaReport>("somaReport", tstart, tend, dt);
+            std::make_shared<SomaReport>("somaReport", tstart, tend, dt, report_units);
 
         THEN("Number of steps is 34 (33 + 1)") {
             REQUIRE(soma_report->get_num_steps() == 34);
@@ -61,7 +62,7 @@ SCENARIO("Test Report class", "[Report]") {
         const double tend = 1.0;
         const double dt = 0.1;
         std::shared_ptr<Report> element_report =
-            std::make_shared<ElementReport>("elementReport", tstart, tend, dt);
+            std::make_shared<ElementReport>("elementReport", tstart, tend, dt, report_units);
         THEN("Number of steps is 10") {
             REQUIRE(element_report->get_num_steps() == 10);
         }

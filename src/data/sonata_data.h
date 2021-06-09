@@ -19,6 +19,7 @@ class SonataData
                double dt,
                double tstart,
                double tend,
+               const std::string& units,
                std::shared_ptr<nodes_t> nodes);
     SonataData(const std::string& report_name,
                const std::string& population_name,
@@ -60,6 +61,7 @@ class SonataData
   private:
     std::string report_name_;
     std::string population_name_;
+    std::string report_units_;
     uint64_t population_offset_;
     std::vector<float> report_buffer_;
     uint32_t total_elements_ = 0;

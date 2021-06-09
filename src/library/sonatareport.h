@@ -44,8 +44,12 @@ class SonataReport
         return reports_.size();
     }
 
-    std::shared_ptr<Report> create_report(
-        const std::string& name, const std::string& king, double tstart, double tend, double dt);
+    std::shared_ptr<Report> create_report(const std::string& name,
+                                          const std::string& kind,
+                                          double tstart,
+                                          double tend,
+                                          double dt,
+                                          const std::string& units);
 
     std::shared_ptr<Report> get_report(const std::string& name) const;
 

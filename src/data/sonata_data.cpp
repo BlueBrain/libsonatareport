@@ -17,11 +17,13 @@ SonataData::SonataData(const std::string& report_name,
                        double dt,
                        double tstart,
                        double tend,
+                       const std::string& units,
                        std::shared_ptr<nodes_t> nodes)
     : report_name_(report_name)
     , population_name_(population_name)
     , population_offset_(population_offset)
     , num_steps_(num_steps)
+    , report_units_(units)
     , hdf5_writer_(std::make_unique<HDF5Writer>(report_name))
     , nodes_(nodes) {
     prepare_buffer(max_buffer_size);
@@ -257,7 +259,7 @@ void SonataData::write_report_header() {
     hdf5_writer_->configure_dataset(reports_population_group + "/data",
                                     num_steps_,
                                     total_elements_);
-    hdf5_writer_->configure_attribute(reports_population_group + "/data", "units", "mV");
+    hdf5_writer_->configure_attribute(reports_population_group + "/data", "units", report_units_);
 
     std::vector<uint64_t> sonata_node_ids(node_ids_);
     convert_gids_to_sonata(sonata_node_ids);

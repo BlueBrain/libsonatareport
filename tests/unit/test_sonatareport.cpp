@@ -5,6 +5,7 @@
 static const char* element_report_name = "myElementReport";
 static const char* soma_report_name = "mySomaReport";
 static const char* population_name = "All";
+static const char* report_units = "nA";
 static const uint64_t population_offset = 0;
 
 double* square_value(double* elem) {
@@ -20,7 +21,7 @@ SCENARIO("Test SonataReport API", "[sonatareport]") {
     uint32_t element_id = 142;
 
     WHEN("We add a new report (element) and node") {
-        sonata_create_report(element_report_name, tstart, tend, dt, "compartment");
+        sonata_create_report(element_report_name, tstart, tend, dt, report_units, "compartment");
         sonata_add_node(element_report_name, population_name, population_offset, 1);
         THEN("Number of reports is 1") {
             REQUIRE(sonata_get_num_reports() == 1);
@@ -31,7 +32,7 @@ SCENARIO("Test SonataReport API", "[sonatareport]") {
     }
 
     WHEN("We add a node to an existing element report") {
-        sonata_create_report(element_report_name, tstart, tend, dt, "compartment");
+        sonata_create_report(element_report_name, tstart, tend, dt, report_units, "compartment");
         sonata_add_node(element_report_name, population_name, population_offset, 2);
         THEN("Number of reports is still 1") {
             REQUIRE(sonata_get_num_reports() == 1);
@@ -39,7 +40,7 @@ SCENARIO("Test SonataReport API", "[sonatareport]") {
     }
 
     WHEN("We add an existing node to an existing element report") {
-        sonata_create_report(element_report_name, tstart, tend, dt, "compartment");
+        sonata_create_report(element_report_name, tstart, tend, dt, report_units, "compartment");
         sonata_add_node(element_report_name, population_name, population_offset, 2);
         THEN("Number of reports is still 1") {
             REQUIRE(sonata_get_num_reports() == 1);
@@ -47,7 +48,7 @@ SCENARIO("Test SonataReport API", "[sonatareport]") {
     }
 
     WHEN("We add a second report (soma), a node and a variable") {
-        sonata_create_report(soma_report_name, tstart, tend, dt, "soma");
+        sonata_create_report(soma_report_name, tstart, tend, dt, report_units, "soma");
         sonata_add_node(soma_report_name, population_name, population_offset, 1);
         double soma_value = 42;
         sonata_add_element(soma_report_name, population_name, 1, element_id, &soma_value);
@@ -66,7 +67,7 @@ SCENARIO("Test SonataReport API", "[sonatareport]") {
 
     WHEN("We add a report of a non existing type") {
         const char* weird_report_name = "myWeirdReport";
-        sonata_create_report(weird_report_name, tstart, tend, dt, "weird");
+        sonata_create_report(weird_report_name, tstart, tend, dt, report_units, "weird");
         THEN("Number of reports is still 2") {
             REQUIRE(sonata_get_num_reports() == 2);
         }
@@ -92,7 +93,7 @@ SCENARIO("Test SonataReport API", "[sonatareport]") {
         std::array<double, 5> elements{3.45, 563.12, 23.4, 779.2, 42.1};
         const char* report_name = "elementReport";
 
-        sonata_create_report(report_name, tstart, tend, dt, "compartment");
+        sonata_create_report(report_name, tstart, tend, dt, report_units, "compartment");
         for (int node_id : node_ids) {
             sonata_add_node(report_name, population_name, population_offset, node_id);
             for (auto element_value : elements) {
