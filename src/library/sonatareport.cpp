@@ -29,12 +29,16 @@ bool SonataReport::is_empty() {
     return reports_.empty();
 }
 
-std::shared_ptr<Report> SonataReport::create_report(
-    const std::string& name, const std::string& kind, double tstart, double tend, double dt) {
+std::shared_ptr<Report> SonataReport::create_report(const std::string& name,
+                                                    const std::string& kind,
+                                                    double tstart,
+                                                    double tend,
+                                                    double dt,
+                                                    const std::string& units) {
     if (kind == "compartment" || kind == "synapse" || kind == "summation") {
-        reports_.emplace(name, std::make_shared<ElementReport>(name, tstart, tend, dt));
+        reports_.emplace(name, std::make_shared<ElementReport>(name, tstart, tend, dt, units));
     } else if (kind == "soma") {
-        reports_.emplace(name, std::make_shared<SomaReport>(name, tstart, tend, dt));
+        reports_.emplace(name, std::make_shared<SomaReport>(name, tstart, tend, dt, units));
     } else {
         throw std::runtime_error("Kind '" + kind + "' doesn't exist!");
     }

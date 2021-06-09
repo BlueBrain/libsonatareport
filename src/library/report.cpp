@@ -12,12 +12,14 @@ namespace sonata {
 // default buffer size of 4MB
 constexpr uint64_t default_max_buffer_size = 4194304;
 
-Report::Report(const std::string& report_name, double tstart, double tend, double dt)
+Report::Report(
+    const std::string& report_name, double tstart, double tend, double dt, const std::string& units)
     : populations_(std::make_shared<populations_t>())
     , report_name_(report_name)
     , tstart_(tstart)
     , tend_(tend)
     , dt_(dt)
+    , units_(units)
     , max_buffer_size_(default_max_buffer_size)
     , report_is_closed_(false) {
     // Calculate number of reporting steps
@@ -69,6 +71,7 @@ int Report::prepare_dataset() {
                                          dt_,
                                          tstart_,
                                          tend_,
+                                         units_,
                                          nodes));
         sonata_populations_.back()->prepare_dataset();
     }

@@ -12,7 +12,11 @@ namespace sonata {
 class Report
 {
   public:
-    Report(const std::string& report_name, double tstart, double tend, double dt);
+    Report(const std::string& report_name,
+           double tstart,
+           double tend,
+           double dt,
+           const std::string& units);
     virtual ~Report() = default;
     int get_num_nodes(const std::string& population_name) const {
         return populations_->at(population_name)->size();
@@ -57,6 +61,7 @@ class Report
     double tstart_;
     double tend_;
     double dt_;
+    std::string units_;
     int num_steps_;
     size_t max_buffer_size_;
     bool report_is_closed_;

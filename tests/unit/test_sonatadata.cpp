@@ -10,6 +10,7 @@
 using namespace bbp::sonata;
 
 static const std::string population_name = "All";
+static const std::string report_units = "nA";
 static const uint64_t population_offset = 100;
 
 SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
@@ -51,6 +52,7 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
                                                                               dt,
                                                                               tstart,
                                                                               tend,
+                                                                              report_units,
                                                                               nodes);
             std::vector<uint64_t> nodeids_1 = {101, 142};
             std::vector<uint64_t> nodeids_2 = {102};
@@ -111,6 +113,7 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
                                                                                dt,
                                                                                tstart,
                                                                                tend,
+                                                                               report_units,
                                                                                nodes);
 
             sonata2->prepare_dataset();

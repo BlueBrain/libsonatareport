@@ -25,6 +25,7 @@ int sonata_create_report(const char* report_name,
                          double start_time,
                          double end_time,
                          double delta_time,
+                         const char* units,
                          const char* kind);
 
 /*!

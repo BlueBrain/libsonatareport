@@ -10,11 +10,15 @@ int sonata_clear() {
     return 0;
 }
 
-int sonata_create_report(
-    const char* report_name, double tstart, double tend, double dt, const char* kind) {
+int sonata_create_report(const char* report_name,
+                         double tstart,
+                         double tend,
+                         double dt,
+                         const char* units,
+                         const char* kind) {
     try {
         if (!sonata_report.report_exists(report_name)) {
-            sonata_report.create_report(report_name, kind, tstart, tend, dt);
+            sonata_report.create_report(report_name, kind, tstart, tend, dt, units);
         }
     } catch (const std::exception& err) {
         logger->error(err.what());

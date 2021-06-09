@@ -83,9 +83,10 @@ void init(const char* report_name,
           double tstop,
           double dt,
           std::vector<Neuron>& neurons,
-          const std::string& kind) {
+          const std::string& kind,
+          const std::string& units) {
     // logic for registering soma and element reports with reportinglib
-    sonata_create_report(report_name, tstart, tstop, dt, kind.c_str());
+    sonata_create_report(report_name, tstart, tstop, dt, units.c_str(), kind.c_str());
     for (auto& neuron : neurons) {
         sonata_add_node(report_name, population_name, population_offset, neuron.node_id);
         int element_id = neuron.node_id * 1000;
@@ -155,6 +156,7 @@ int main() {
     const char* element_report = "compartment_report";
     const char* soma_report = "soma_report";
     const char* population_name = "All";
+    const char* units = "mV";
     uint64_t population_offset = 0;
 
     init(element_report,
@@ -164,8 +166,17 @@ int main() {
          tstop,
          dt,
          element_neurons,
-         "compartment");
-    init(soma_report, population_name, population_offset, tstart, tstop, dt, soma_neurons, "soma");
+         "compartment",
+         units);
+    init(soma_report,
+         population_name,
+         population_offset,
+         tstart,
+         tstop,
+         dt,
+         soma_neurons,
+         "soma",
+         units);
     sonata_set_max_buffer_size_hint(20);
     sonata_set_atomic_step(dt);
 
