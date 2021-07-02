@@ -98,13 +98,16 @@ void SonataData::prepare_buffer(size_t max_buffer_size) {
 }
 
 bool SonataData::is_due_to_report(double step) const noexcept {
-    // Dont record data if current step < tstart
-    if (step < last_step_recorded_) {
+    // Don't record data if there are no steps (i.e., 'Duration 0')
+    if (last_step_ == 0) {
         return false;
-        // Dont record data if current step > tend
+        // Don't record data if current step < tstart
+    } else if (step < last_step_recorded_) {
+        return false;
+        // Don't record data if current step > tend
     } else if (step > last_step_) {
         return false;
-        // Dont record data if is not a reporting step (step%period)
+        // Don't record data if is not a reporting step (step%period)
     } else if (static_cast<int>(step - last_step_recorded_) % reporting_period_ != 0) {
         return false;
     }
