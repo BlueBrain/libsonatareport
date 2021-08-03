@@ -41,8 +41,11 @@ HDF5Writer::HDF5Writer(const std::string& report_name)
 }
 
 void HDF5Writer::configure_group(const std::string& group_name) {
-    hid_t group = H5Gcreate2(file_, group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-    H5Gclose(group);
+    // create group if it doestn't exist
+    if ( !H5Lexists(file_, group_name.c_str(), H5P_DEFAULT)) {
+        hid_t group = H5Gcreate2(file_, group_name.c_str(), H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+        H5Gclose(group);
+    }
 }
 
 void HDF5Writer::configure_attribute(const std::string& dataset_name,

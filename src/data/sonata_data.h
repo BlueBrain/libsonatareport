@@ -25,10 +25,16 @@ class SonataData
                const std::string& population_name,
                const std::vector<double>& spike_timestamps,
                const std::vector<uint64_t>& spike_node_ids);
+    SonataData(const std::string& report_name);
 
     void prepare_dataset();
     void write_report_header();
     void write_spikes_header(const std::string& order_by);
+    void write_spikes_header(const std::string& population_name,
+                             uint64_t population_offset,
+                             const std::vector<double>& spike_timestamps,
+                             const std::vector<uint64_t>& spike_node_ids,
+                             const std::string& order_by);
     void write_data();
     void close();
 

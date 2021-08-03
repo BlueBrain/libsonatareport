@@ -46,6 +46,10 @@ SonataData::SonataData(const std::string& report_name,
     , spike_node_ids_(spike_node_ids)
     , hdf5_writer_(std::make_unique<HDF5Writer>(report_name)) {}
 
+SonataData::SonataData(const std::string& report_name)
+    : report_name_(report_name)
+    , hdf5_writer_(std::make_unique<HDF5Writer>(report_name)) {}
+
 void SonataData::prepare_buffer(size_t max_buffer_size) {
     logger->trace("Prepare buffer for {}", report_name_);
 
@@ -269,6 +273,18 @@ void SonataData::write_report_header() {
     hdf5_writer_->write_time(reports_population_group + "/mapping/time", time_);
     hdf5_writer_->configure_attribute(reports_population_group + "/mapping/time", "units", "ms");
 }
+
+void SonataData::write_spikes_header(const std::string& population_name,
+                                     uint64_t population_offset,
+                                     const std::vector<double>& spike_timestamps,
+                                     const std::vector<uint64_t>& spike_node_ids,
+                                     const std::string& order_by){
+    population_name_ = population_name;
+    population_offset_ = population_offset;
+    spike_timestamps_ = spike_timestamps;
+    spike_node_ids_ = spike_node_ids;
+    write_spikes_header(order_by);
+    }
 
 void SonataData::write_spikes_header(const std::string& order_by) {
     logger->trace("Writing SPIKE header!");
