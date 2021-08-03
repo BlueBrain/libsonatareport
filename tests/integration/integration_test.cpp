@@ -226,7 +226,7 @@ int main() {
     std::transform(std::begin(spike_node_ids),
                    std::end(spike_node_ids),
                    std::begin(spike_node_ids),
-                   [population_offset](int x){return x + population_offset;});
+                   [population_offset](int x) { return x + population_offset; });
     // write spikes for population NodeB giving id offset
     sonata_write_spikes("NodeB",
                         population_offset,
@@ -237,7 +237,6 @@ int main() {
 
     // Close the spike file
     sonata_close_spikefile();
-
 
     if (global_rank == 0) {
         logger->info("Finalizing...");

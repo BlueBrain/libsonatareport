@@ -278,13 +278,13 @@ void SonataData::write_spikes_header(const std::string& population_name,
                                      uint64_t population_offset,
                                      const std::vector<double>& spike_timestamps,
                                      const std::vector<uint64_t>& spike_node_ids,
-                                     const std::string& order_by){
+                                     const std::string& order_by) {
     population_name_ = population_name;
     population_offset_ = population_offset;
     spike_timestamps_ = spike_timestamps;
     spike_node_ids_ = spike_node_ids;
     write_spikes_header(order_by);
-    }
+}
 
 void SonataData::write_spikes_header(const std::string& order_by) {
     logger->trace("Writing SPIKE header!");

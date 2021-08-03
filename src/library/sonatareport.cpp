@@ -86,11 +86,11 @@ void SonataReport::prepare_datasets() {
     }
 }
 
-void SonataReport::create_spikefile(const std::string& output_dir){
+void SonataReport::create_spikefile(const std::string& output_dir) {
     std::string report_name = output_dir + "/out";
     spike_data_ = std::make_unique<SonataData>(report_name);
 }
-void SonataReport::close_spikefile(){
+void SonataReport::close_spikefile() {
     spike_data_->close();
 }
 void SonataReport::write_spikes(const std::string& population_name,
@@ -98,7 +98,8 @@ void SonataReport::write_spikes(const std::string& population_name,
                                 const std::vector<double>& spike_timestamps,
                                 const std::vector<uint64_t>& spike_node_ids,
                                 const std::string& order_by) {
-    spike_data_->write_spikes_header(population_name, population_offset, spike_timestamps, spike_node_ids, order_by);
+    spike_data_->write_spikes_header(
+        population_name, population_offset, spike_timestamps, spike_node_ids, order_by);
 }
 
 }  // namespace sonata
