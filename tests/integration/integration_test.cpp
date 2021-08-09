@@ -56,8 +56,9 @@ std::vector<uint64_t> generate_data(std::vector<Neuron>& neurons,
                                     const std::string& kind,
                                     int seed) {
     std::vector<uint64_t> nodeids;
-    // Each nodeid starts with the rank*10 (i.e. rank 5 will have nodeids: 51, 52, 53...)
-    uint64_t next_nodeid = 1 + seed * 10;
+    // Each nodeid starts with the 1000 + rank*10 (i.e. rank 5 will have nodeids: 1051, 1052,
+    // 1053...)
+    uint64_t next_nodeid = 1000 + 1 + seed * 10;
 
     // 5+-5 neurons
     uint32_t num_neurons = 5 + ((2 + (seed % 10)) - 5);
@@ -222,11 +223,7 @@ int main() {
 
     // Write the spikes for another popution with offset on node ids
     population_offset = 1000;
-    // apply offset to spike_node_ids
-    std::transform(std::begin(spike_node_ids),
-                   std::end(spike_node_ids),
-                   std::begin(spike_node_ids),
-                   [population_offset](int x) { return x + population_offset; });
+
     // write spikes for population NodeB giving id offset
     sonata_write_spikes("NodeB",
                         population_offset,

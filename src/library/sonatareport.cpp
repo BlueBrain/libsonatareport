@@ -100,8 +100,11 @@ void SonataReport::write_spikes(const std::string& population_name,
                                 const std::vector<double>& spike_timestamps,
                                 const std::vector<uint64_t>& spike_node_ids,
                                 const std::string& order_by) {
-    spike_data_->write_spikes_header(
-        population_name, population_offset, spike_timestamps, spike_node_ids, order_by);
+    std::shared_ptr<Population> population = std::make_shared<Population>(population_name,
+                                                                          population_offset,
+                                                                          spike_timestamps,
+                                                                          spike_node_ids);
+    spike_data_->write_spikes_header(population, order_by);
 }
 
 }  // namespace sonata
