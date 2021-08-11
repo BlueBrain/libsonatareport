@@ -218,7 +218,7 @@ int main() {
     std::vector<std::string> population_names{"NodeA", "NodeB"};
     std::vector<uint64_t> population_offsets{0, 1000};
     // Write the spikes for populations "NodeA" and "NodeB"
-    for (int i = 0; i < population_names.size(); i++) {
+    for (size_t i = 0; i < population_names.size(); i++) {
         sonata_add_spikes_population(population_names[i].data(),
                                      population_offsets[i],
                                      spike_timestamps.data(),
