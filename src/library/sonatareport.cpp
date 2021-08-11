@@ -91,20 +91,22 @@ void SonataReport::create_spikefile(const std::string& output_dir) {
     spike_data_ = std::make_unique<SonataData>(report_name);
 }
 
-void SonataReport::close_spikefile() {
-    spike_data_->close();
+void SonataReport::add_spikes_population(const std::string& population_name,
+                                         uint64_t population_offset,
+                                         const std::vector<double>& spike_timestamps,
+                                         const std::vector<uint64_t>& spike_node_ids,
+                                         const std::string& order_by) {
+    std::shared_ptr<Population> population = std::make_shared<Population>(
+        population_name, population_offset, order_by, spike_timestamps, spike_node_ids);
+    spike_data_->add_population(population);
 }
 
-void SonataReport::write_spikes(const std::string& population_name,
-                                uint64_t population_offset,
-                                const std::vector<double>& spike_timestamps,
-                                const std::vector<uint64_t>& spike_node_ids,
-                                const std::string& order_by) {
-    std::shared_ptr<Population> population = std::make_shared<Population>(population_name,
-                                                                          population_offset,
-                                                                          spike_timestamps,
-                                                                          spike_node_ids);
-    spike_data_->write_spikes_header(population, order_by);
+void SonataReport::write_spike_populations() {
+    spike_data_->write_spike_populations();
+}
+
+void SonataReport::close_spikefile() {
+    spike_data_->close();
 }
 
 }  // namespace sonata

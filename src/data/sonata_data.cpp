@@ -264,21 +264,9 @@ void SonataData::write_report_header() {
     hdf5_writer_->configure_attribute(reports_population_group + "/mapping/time", "units", "ms");
 }
 
-/*void SonataData::write_spikes_header(const std::string& population_name,
-                                     uint64_t population_offset,
-                                     const std::vector<double>& spike_timestamps,
-                                     const std::vector<uint64_t>& spike_node_ids,
-                                     const std::string& order_by) {
-    population_name_ = population_name;
-    population_offset_ = population_offset;
-    spike_timestamps_ = spike_timestamps;
-    spike_node_ids_ = spike_node_ids;
-    write_spikes_header(order_by);
-}*/
-
-void SonataData::write_spikes_header(const std::shared_ptr<Population> population,
-                                     const std::string& order_by) {
+void SonataData::write_spikes_header(const std::shared_ptr<Population> population) {
     logger->trace("Writing SPIKE header!");
+    const std::string order_by = population->get_sorting();
     if (order_by != "by_time" && order_by != "by_id" && order_by != "none") {
         throw std::runtime_error("Order method " + order_by + "does not exists");
     }
@@ -300,8 +288,16 @@ void SonataData::write_spikes_header(const std::shared_ptr<Population> populatio
     std::vector<uint64_t> sonata_spike_node_ids(population->get_spike_node_ids());
     convert_gids_to_sonata(sonata_spike_node_ids, population->get_population_offset());
     hdf5_writer_->write(spikes_population_group + "/node_ids", sonata_spike_node_ids);
+}
 
+void SonataData::add_population(const std::shared_ptr<Population> population) {
     populations_.push_back(population);
+}
+
+void SonataData::write_spike_populations() {
+    for (const auto& population : populations_) {
+        write_spikes_header(population);
+    }
 }
 
 void SonataData::write_data() {
@@ -328,10 +324,12 @@ void SonataData::close() {
 
 Population::Population(const std::string& population_name,
                        uint64_t population_offset,
+                       const std::string& order_by,
                        const std::vector<double>& spike_timestamps,
                        const std::vector<uint64_t>& spike_node_ids)
     : population_name_(population_name.empty() ? "All" : population_name)
     , population_offset_(population_offset)
+    , order_by_(order_by.empty() ? "by_time" : order_by)
     , spike_timestamps_(spike_timestamps)
     , spike_node_ids_(spike_node_ids) {}
 

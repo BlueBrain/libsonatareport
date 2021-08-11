@@ -154,16 +154,23 @@ void sonata_create_spikefile(const char* output_dir) {
     sonata_report.create_spikefile(output_directory);
 }
 
-void sonata_write_spikes(const char* population_name,
-                         uint64_t population_offset,
-                         const double* timestamps,
-                         uint64_t num_timestamps,
-                         const int* node_ids,
-                         uint64_t num_node_ids) {
+void sonata_add_spikes_population(const char* population_name,
+                                  uint64_t population_offset,
+                                  const double* timestamps,
+                                  uint64_t num_timestamps,
+                                  const int* node_ids,
+                                  uint64_t num_node_ids) {
     const std::vector<double> spike_timestamps(timestamps, timestamps + num_timestamps);
     const std::vector<uint64_t> spike_node_ids(node_ids, node_ids + num_node_ids);
     const std::string population(population_name);
-    sonata_report.write_spikes(population, population_offset, spike_timestamps, spike_node_ids);
+    sonata_report.add_spikes_population(population,
+                                        population_offset,
+                                        spike_timestamps,
+                                        spike_node_ids);
+}
+
+void sonata_write_spike_populations() {
+    sonata_report.write_spike_populations();
 }
 
 void sonata_close_spikefile() {

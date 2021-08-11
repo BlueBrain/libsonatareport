@@ -138,9 +138,10 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
         uint64_t population_offset = 0;
         std::unique_ptr<SonataData> sonata_spikes = std::make_unique<SonataData>("spikes");
         std::shared_ptr<Population> sonata_population = std::make_shared<Population>(
-            population_name, population_offset, spike_timestamps, spike_node_ids);
-        WHEN("We write the spikes ordered by time") {
-            sonata_spikes->write_spikes_header(sonata_population, "by_time");
+            population_name, population_offset, "by_time", spike_timestamps, spike_node_ids);
+        WHEN("We add the population and write the spikes ordered by time") {
+            sonata_spikes->add_population(sonata_population);
+            sonata_spikes->write_spike_populations();
             THEN("We check that the spike nodes ids are ordered according to timestamps") {
                 const std::vector<uint64_t> node_ids = sonata_population->get_spike_node_ids();
                 std::vector<uint64_t> compare = {5, 2, 3, 2, 3};
@@ -153,7 +154,8 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
             }
         }
         WHEN("We write the spikes ordered by id") {
-            sonata_spikes->write_spikes_header(sonata_population, "by_id");
+            sonata_population->set_sorting("by_id");
+            sonata_spikes->write_spikes_header(sonata_population);
             THEN("We check that the spike node ids are in order") {
                 const std::vector<uint64_t> node_ids = sonata_population->get_spike_node_ids();
                 std::vector<uint64_t> compare = {2, 2, 3, 3, 5};
@@ -166,7 +168,8 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
             }
         }
         WHEN("We dont order the spikes before writing") {
-            sonata_spikes->write_spikes_header(sonata_population, "none");
+            sonata_population->set_sorting("none");
+            sonata_spikes->write_spikes_header(sonata_population);
             THEN("We check that the spike node ids are unordered") {
                 const std::vector<uint64_t> node_ids = sonata_population->get_spike_node_ids();
                 std::vector<uint64_t> compare = {3, 5, 2, 3, 2};
@@ -180,8 +183,8 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
         }
         WHEN("We write the spikes ordered by weird string") {
             THEN("It throws an exception") {
-                REQUIRE_THROWS(
-                    sonata_spikes->write_spikes_header(sonata_population, "wrong_order"));
+                sonata_population->set_sorting("wrong_order");
+                REQUIRE_THROWS(sonata_spikes->write_spikes_header(sonata_population));
             }
         }
         sonata_spikes->close();

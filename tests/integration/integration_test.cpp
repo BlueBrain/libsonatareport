@@ -211,34 +211,29 @@ int main() {
     }
     sonata_flush(t);
     const std::string output_dir = ".";
+
     // Create a spike file
     sonata_create_spikefile(output_dir.data());
-    // Write the spikes for population "NodeA"
-    sonata_write_spikes("NodeA",
-                        0,
-                        spike_timestamps.data(),
-                        spike_timestamps.size(),
-                        spike_node_ids.data(),
-                        spike_node_ids.size());
 
-    // Write the spikes for another popution with offset on node ids
-    population_offset = 1000;
+    std::vector<std::string> population_names{"NodeA", "NodeB"};
+    std::vector<uint64_t> population_offsets{0, 1000};
+    // Write the spikes for populations "NodeA" and "NodeB"
+    for (int i = 0; i < population_names.size(); i++) {
+        sonata_add_spikes_population(population_names[i].data(),
+                                     population_offsets[i],
+                                     spike_timestamps.data(),
+                                     spike_timestamps.size(),
+                                     spike_node_ids.data(),
+                                     spike_node_ids.size());
+    }
 
-    // write spikes for population NodeB giving id offset
-    sonata_write_spikes("NodeB",
-                        population_offset,
-                        spike_timestamps.data(),
-                        spike_timestamps.size(),
-                        spike_node_ids.data(),
-                        spike_node_ids.size());
-
+    sonata_write_spike_populations();
     // Close the spike file
     sonata_close_spikefile();
 
     if (global_rank == 0) {
         logger->info("Finalizing...");
     }
-
 
 #ifdef SONATA_REPORT_HAVE_MPI
     MPI_Finalize();

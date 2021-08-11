@@ -13,6 +13,7 @@ class Population
   public:
     Population(const std::string& population_name,
                uint64_t population_offset,
+               const std::string& order_by,
                const std::vector<double>& spike_timestamps,
                const std::vector<uint64_t>& spike_node_ids);
 
@@ -21,6 +22,12 @@ class Population
     }
     uint64_t get_population_offset() const noexcept {
         return population_offset_;
+    }
+    const std::string& get_sorting() const noexcept {
+        return order_by_;
+    }
+    void set_sorting(const std::string& order_by) noexcept {
+        order_by_ = order_by;
     }
     const std::vector<double>& get_spike_timestamps() const noexcept {
         return spike_timestamps_;
@@ -38,6 +45,7 @@ class Population
   private:
     std::string population_name_;
     uint64_t population_offset_;
+    std::string order_by_;
     std::vector<double> spike_timestamps_;
     std::vector<uint64_t> spike_node_ids_;
 };
@@ -60,8 +68,9 @@ class SonataData
 
     void prepare_dataset();
     void write_report_header();
-    void write_spikes_header(const std::shared_ptr<Population> population,
-                             const std::string& order_by);
+    void write_spikes_header(const std::shared_ptr<Population> population);
+    void write_spike_populations();
+    void add_population(const std::shared_ptr<Population> population);
 
     void write_data();
     void close();
