@@ -37,6 +37,8 @@ SonataData::SonataData(const std::string& report_name,
 
 SonataData::SonataData(const std::string& report_name)
     : report_name_(report_name)
+    , population_name_("All")
+    , population_offset_(0)
     , hdf5_writer_(std::make_unique<HDF5Writer>(report_name)) {}
 
 void SonataData::prepare_buffer(size_t max_buffer_size) {
