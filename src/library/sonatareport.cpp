@@ -96,7 +96,7 @@ void SonataReport::add_spikes_population(const std::string& population_name,
                                          const std::vector<double>& spike_timestamps,
                                          const std::vector<uint64_t>& spike_node_ids,
                                          const std::string& order_by) {
-    std::shared_ptr<Population> population = std::make_shared<Population>(
+    std::unique_ptr<Population> population = std::make_unique<Population>(
         population_name, population_offset, order_by, spike_timestamps, spike_node_ids);
     spike_data_->add_population(population);
 }

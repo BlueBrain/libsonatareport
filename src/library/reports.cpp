@@ -150,8 +150,7 @@ void sonata_refresh_pointers(double* (*refresh_function)(double*) ) {
 }
 
 void sonata_create_spikefile(const char* output_dir) {
-    const std::string output_directory(output_dir);
-    sonata_report.create_spikefile(output_directory);
+    sonata_report.create_spikefile(output_dir);
 }
 
 void sonata_add_spikes_population(const char* population_name,

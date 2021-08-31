@@ -264,7 +264,7 @@ void SonataData::write_report_header() {
     hdf5_writer_->configure_attribute(reports_population_group + "/mapping/time", "units", "ms");
 }
 
-void SonataData::write_spikes_header(const std::shared_ptr<Population> population) {
+void SonataData::write_spikes_header(const std::unique_ptr<Population>& population) {
     logger->trace("Writing SPIKE header!");
     const std::string order_by = population->get_sorting();
     if (order_by != "by_time" && order_by != "by_id" && order_by != "none") {
@@ -290,8 +290,8 @@ void SonataData::write_spikes_header(const std::shared_ptr<Population> populatio
     hdf5_writer_->write(spikes_population_group + "/node_ids", sonata_spike_node_ids);
 }
 
-void SonataData::add_population(const std::shared_ptr<Population> population) {
-    populations_.push_back(population);
+void SonataData::add_population(std::unique_ptr<Population>& population) {
+    populations_.push_back(std::move(population));
 }
 
 void SonataData::write_spike_populations() {

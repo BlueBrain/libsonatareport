@@ -68,9 +68,9 @@ class SonataData
 
     void prepare_dataset();
     void write_report_header();
-    void write_spikes_header(const std::shared_ptr<Population> population);
+    void write_spikes_header(const std::unique_ptr<Population>& population);
     void write_spike_populations();
-    void add_population(const std::shared_ptr<Population> population);
+    void add_population(std::unique_ptr<Population>& population);
 
     void write_data();
     void close();
@@ -120,7 +120,7 @@ class SonataData
     std::set<uint64_t> nodes_recorded_;
     const std::unique_ptr<HDF5Writer> hdf5_writer_;
     std::shared_ptr<nodes_t> nodes_;
-    std::vector<std::shared_ptr<Population>> populations_;
+    std::vector<std::unique_ptr<Population>> populations_;
 
     void prepare_buffer(size_t max_buffer_size);
 };
