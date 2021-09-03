@@ -70,7 +70,7 @@ class SonataData
     void write_report_header();
     void write_spikes_header(const std::unique_ptr<Population>& population);
     void write_spike_populations();
-    void add_population(std::unique_ptr<Population>& population);
+    void add_population(std::unique_ptr<Population> population);
 
     void write_data();
     void close();

@@ -292,7 +292,7 @@ void SonataData::write_spikes_header(const std::unique_ptr<Population>& populati
     hdf5_writer_->write(spikes_population_group + "/node_ids", sonata_spike_node_ids);
 }
 
-void SonataData::add_population(std::unique_ptr<Population>& population) {
+void SonataData::add_population(std::unique_ptr<Population> population) {
     populations_.push_back(std::move(population));
 }
 
