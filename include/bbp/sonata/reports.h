@@ -76,13 +76,12 @@ void sonata_create_spikefile(const char* output_dir);
 /**
  * \brief Spike arrays to be written to file
  */
-[[deprecated("Use sonata_write_spike_populations() and relevant functions instead ")]] void
-sonata_write_spikes(const char* population_name,
-                    const double* spike_timestamps,
-                    uint64_t num_timestamps,
-                    const int* spike_node_ids,
-                    uint64_t num_node_ids,
-                    const char* output_dir);
+void sonata_write_spikes(const char* population_name,
+                         const double* spike_timestamps,
+                         uint64_t num_timestamps,
+                         const int* spike_node_ids,
+                         uint64_t num_node_ids,
+                         const char* output_dir);
 
 /**
  * \brief Add population data to spike report

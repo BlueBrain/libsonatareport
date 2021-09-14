@@ -266,39 +266,38 @@ void SonataData::write_report_header() {
     hdf5_writer_->configure_attribute(reports_population_group + "/mapping/time", "units", "ms");
 }
 
-void SonataData::write_spikes_header(const std::unique_ptr<Population>& population) {
+void SonataData::write_spikes_header(Population& population) {
     logger->trace("Writing SPIKE header!");
-    const std::string order_by = population->get_sorting();
+    const std::string order_by = population.get_sorting();
     if (order_by != "by_time" && order_by != "by_id" && order_by != "none") {
         throw std::runtime_error("Order method " + order_by + "does not exists");
     }
 
-    const std::string spikes_population_group = "/spikes/" + population->get_population_name();
+    const std::string spikes_population_group = "/spikes/" + population.get_population_name();
     hdf5_writer_->configure_group("/spikes");
     hdf5_writer_->configure_group(spikes_population_group);
     hdf5_writer_->configure_enum_attribute(spikes_population_group, "sorting", order_by);
     hsize_t timestamps_size =
-        Implementation::get_global_dims(report_name_, population->get_spike_timestamps().size());
-    Implementation::sort_spikes(population->get_spike_timestamps(),
-                                population->get_spike_node_ids(),
+        Implementation::get_global_dims(report_name_, population.get_spike_timestamps().size());
+    Implementation::sort_spikes(population.get_spike_timestamps(),
+                                population.get_spike_node_ids(),
                                 order_by);
-    hdf5_writer_->write(spikes_population_group + "/timestamps",
-                        population->get_spike_timestamps());
+    hdf5_writer_->write(spikes_population_group + "/timestamps", population.get_spike_timestamps());
     if (timestamps_size > 0) {
         hdf5_writer_->configure_attribute(spikes_population_group + "/timestamps", "units", "ms");
     }
-    std::vector<uint64_t> sonata_spike_node_ids(population->get_spike_node_ids());
-    convert_gids_to_sonata(sonata_spike_node_ids, population->get_population_offset());
+    std::vector<uint64_t> sonata_spike_node_ids(population.get_spike_node_ids());
+    convert_gids_to_sonata(sonata_spike_node_ids, population.get_population_offset());
     hdf5_writer_->write(spikes_population_group + "/node_ids", sonata_spike_node_ids);
 }
 
-void SonataData::add_population(std::unique_ptr<Population> population) {
+void SonataData::add_population(std::unique_ptr<Population>&& population) {
     populations_.push_back(std::move(population));
 }
 
 void SonataData::write_spike_populations() {
     for (const auto& population : populations_) {
-        write_spikes_header(population);
+        write_spikes_header(*population);
     }
 }
 
