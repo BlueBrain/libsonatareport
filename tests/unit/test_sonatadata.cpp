@@ -37,23 +37,21 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
             ++i;
         }
         WHEN("We record some data and prepare the dataset for a big enough max buffer size") {
-            std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>(
-                std::initializer_list<nodes_t::value_type>{{101, node},
-                                                           {102, node2},
-                                                           {142, node42}});
+            auto nodes = std::make_shared<nodes_t>(std::initializer_list<nodes_t::value_type>{
+                {101, node}, {102, node2}, {142, node42}});
 
             int num_steps = 3;
             size_t max_buffer_size = 1024;
-            std::unique_ptr<SonataData> sonata = std::make_unique<SonataData>("test_sonatadata",
-                                                                              population_name,
-                                                                              population_offset,
-                                                                              max_buffer_size,
-                                                                              num_steps,
-                                                                              dt,
-                                                                              tstart,
-                                                                              tend,
-                                                                              report_units,
-                                                                              nodes);
+            auto sonata = std::make_unique<SonataData>("test_sonatadata",
+                                                       population_name,
+                                                       population_offset,
+                                                       max_buffer_size,
+                                                       num_steps,
+                                                       dt,
+                                                       tstart,
+                                                       tend,
+                                                       report_units,
+                                                       nodes);
             std::vector<uint64_t> nodeids_1 = {101, 142};
             std::vector<uint64_t> nodeids_2 = {102};
 
@@ -81,7 +79,7 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
             THEN("We check the node ids of the sonata report after applying offset") {
                 const std::vector<uint64_t> node_ids = sonata->get_node_ids();
                 std::vector<uint64_t> sonata_node_ids(node_ids);
-                sonata->convert_gids_to_sonata(sonata_node_ids);
+                sonata->convert_gids_to_sonata(sonata_node_ids, population_offset);
                 std::vector<uint64_t> compare = {0, 1, 41};
                 REQUIRE(sonata_node_ids == compare);
             }
@@ -99,22 +97,20 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
             }
         }
         WHEN("We record some other data and prepare the dataset for a small max buffer size") {
-            std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>(
-                std::initializer_list<nodes_t::value_type>{{101, node},
-                                                           {102, node2},
-                                                           {142, node42}});
+            auto nodes = std::make_shared<nodes_t>(std::initializer_list<nodes_t::value_type>{
+                {101, node}, {102, node2}, {142, node42}});
             int num_steps = 3;
             size_t max_buffer_size = 128;
-            std::unique_ptr<SonataData> sonata2 = std::make_unique<SonataData>("test_sonatadata2",
-                                                                               population_name,
-                                                                               population_offset,
-                                                                               max_buffer_size,
-                                                                               num_steps,
-                                                                               dt,
-                                                                               tstart,
-                                                                               tend,
-                                                                               report_units,
-                                                                               nodes);
+            auto sonata2 = std::make_unique<SonataData>("test_sonatadata2",
+                                                        population_name,
+                                                        population_offset,
+                                                        max_buffer_size,
+                                                        num_steps,
+                                                        dt,
+                                                        tstart,
+                                                        tend,
+                                                        report_units,
+                                                        nodes);
 
             sonata2->prepare_dataset();
             for (int i = 0; i < num_steps; i++) {
@@ -135,52 +131,57 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
     GIVEN("Spike data") {
         std::vector<double> spike_timestamps{0.3, 0.1, 0.2, 1.3, 0.7};
         std::vector<uint64_t> spike_node_ids{3, 5, 2, 3, 2};
-        std::unique_ptr<SonataData> sonata_spikes = std::make_unique<SonataData>("spikes",
-                                                                                 population_name,
-                                                                                 spike_timestamps,
-                                                                                 spike_node_ids);
-        WHEN("We write the spikes ordered by time") {
-            sonata_spikes->write_spikes_header("by_time");
+        uint64_t population_offset = 0;
+        auto sonata_spikes = std::make_unique<SonataData>("spikes");
+        auto sonata_population = std::make_unique<Population>(
+            population_name, population_offset, "by_time", spike_timestamps, spike_node_ids);
+        Population* pop_p = sonata_population.get();
+        WHEN("We add the population and write the spikes ordered by time") {
+            sonata_spikes->add_population(std::move(sonata_population));
+            sonata_spikes->write_spike_populations();
             THEN("We check that the spike nodes ids are ordered according to timestamps") {
-                const std::vector<uint64_t> node_ids = sonata_spikes->get_spike_node_ids();
+                const std::vector<uint64_t> node_ids = pop_p->get_spike_node_ids();
                 std::vector<uint64_t> compare = {5, 2, 3, 2, 3};
                 REQUIRE(node_ids == compare);
             }
             THEN("We check that the spike timestamps are in order") {
-                const std::vector<double> timestamps = sonata_spikes->get_spike_timestamps();
+                const std::vector<double> timestamps = pop_p->get_spike_timestamps();
                 std::vector<double> compare = {0.1, 0.2, 0.3, 0.7, 1.3};
                 REQUIRE(timestamps == compare);
             }
         }
         WHEN("We write the spikes ordered by id") {
-            sonata_spikes->write_spikes_header("by_id");
+            sonata_population->set_sorting("by_id");
+            sonata_spikes->write_spikes_header(*sonata_population);
             THEN("We check that the spike node ids are in order") {
-                const std::vector<uint64_t> node_ids = sonata_spikes->get_spike_node_ids();
+                const std::vector<uint64_t> node_ids = pop_p->get_spike_node_ids();
                 std::vector<uint64_t> compare = {2, 2, 3, 3, 5};
                 REQUIRE(node_ids == compare);
             }
             THEN("We check that the spike timestamps are ordered according to node ids") {
-                const std::vector<double> timestamps = sonata_spikes->get_spike_timestamps();
+                const std::vector<double> timestamps = pop_p->get_spike_timestamps();
                 std::vector<double> compare = {0.2, 0.7, 0.3, 1.3, 0.1};
                 REQUIRE(timestamps == compare);
             }
         }
         WHEN("We dont order the spikes before writing") {
-            sonata_spikes->write_spikes_header("none");
+            sonata_population->set_sorting("none");
+            sonata_spikes->write_spikes_header(*sonata_population);
             THEN("We check that the spike node ids are unordered") {
-                const std::vector<uint64_t> node_ids = sonata_spikes->get_spike_node_ids();
+                const std::vector<uint64_t> node_ids = pop_p->get_spike_node_ids();
                 std::vector<uint64_t> compare = {3, 5, 2, 3, 2};
                 REQUIRE(node_ids == compare);
             }
             THEN("We check that the spike timestamps are unordered") {
-                const std::vector<double> timestamps = sonata_spikes->get_spike_timestamps();
+                const std::vector<double> timestamps = pop_p->get_spike_timestamps();
                 std::vector<double> compare = {0.3, 0.1, 0.2, 1.3, 0.7};
                 REQUIRE(timestamps == compare);
             }
         }
         WHEN("We write the spikes ordered by weird string") {
             THEN("It throws an exception") {
-                REQUIRE_THROWS(sonata_spikes->write_spikes_header("wrong_order"));
+                sonata_population->set_sorting("wrong_order");
+                REQUIRE_THROWS(sonata_spikes->write_spikes_header(*sonata_population));
             }
         }
         sonata_spikes->close();

@@ -56,8 +56,9 @@ std::vector<uint64_t> generate_data(std::vector<Neuron>& neurons,
                                     const std::string& kind,
                                     int seed) {
     std::vector<uint64_t> nodeids;
-    // Each nodeid starts with the rank*10 (i.e. rank 5 will have nodeids: 51, 52, 53...)
-    uint64_t next_nodeid = 1 + seed * 10;
+    // Each nodeid starts with the 1000 + rank*10 (i.e. rank 5 will have nodeids: 1051, 1052,
+    // 1053...)
+    uint64_t next_nodeid = 1000 + 1 + seed * 10;
 
     // 5+-5 neurons
     uint32_t num_neurons = 5 + ((2 + (seed % 10)) - 5);
@@ -210,18 +211,29 @@ int main() {
     }
     sonata_flush(t);
     const std::string output_dir = ".";
-    // Write the spikes
-    sonata_write_spikes(population_name,
-                        spike_timestamps.data(),
-                        spike_timestamps.size(),
-                        spike_node_ids.data(),
-                        spike_node_ids.size(),
-                        output_dir.data());
+
+    // Create a spike file
+    sonata_create_spikefile(output_dir.data());
+
+    std::vector<std::string> population_names{"NodeA", "NodeB"};
+    std::vector<uint64_t> population_offsets{0, 1000};
+    // Write the spikes for populations "NodeA" and "NodeB"
+    for (size_t i = 0; i < population_names.size(); i++) {
+        sonata_add_spikes_population(population_names[i].data(),
+                                     population_offsets[i],
+                                     spike_timestamps.data(),
+                                     spike_timestamps.size(),
+                                     spike_node_ids.data(),
+                                     spike_node_ids.size());
+    }
+
+    sonata_write_spike_populations();
+    // Close the spike file
+    sonata_close_spikefile();
 
     if (global_rank == 0) {
         logger->info("Finalizing...");
     }
-
 
 #ifdef SONATA_REPORT_HAVE_MPI
     MPI_Finalize();

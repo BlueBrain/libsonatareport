@@ -150,19 +150,48 @@ void sonata_refresh_pointers(double* (*refresh_function)(double*) ) {
 }
 
 void sonata_write_spikes(const char* population_name,
-                         const double* timestamps,
+                         const double* spike_timestamps,
                          uint64_t num_timestamps,
-                         const int* node_ids,
+                         const int* spike_node_ids,
                          uint64_t num_node_ids,
                          const char* output_dir) {
+    sonata_create_spikefile(output_dir);
+    uint64_t population_offset = 0;
+    sonata_add_spikes_population(population_name,
+                                 population_offset,
+                                 spike_timestamps,
+                                 num_timestamps,
+                                 spike_node_ids,
+                                 num_node_ids);
+    sonata_write_spike_populations();
+    sonata_close_spikefile();
+}
+
+void sonata_create_spikefile(const char* output_dir) {
+    sonata_report.create_spikefile(output_dir);
+}
+
+void sonata_add_spikes_population(const char* population_name,
+                                  uint64_t population_offset,
+                                  const double* timestamps,
+                                  uint64_t num_timestamps,
+                                  const int* node_ids,
+                                  uint64_t num_node_ids) {
     const std::vector<double> spike_timestamps(timestamps, timestamps + num_timestamps);
     const std::vector<uint64_t> spike_node_ids(node_ids, node_ids + num_node_ids);
-    const std::string output_directory(output_dir);
     const std::string population(population_name);
-    bbp::sonata::SonataReport::write_spikes(output_directory,
-                                            population,
-                                            spike_timestamps,
-                                            spike_node_ids);
+    sonata_report.add_spikes_population(population,
+                                        population_offset,
+                                        spike_timestamps,
+                                        spike_node_ids);
+}
+
+void sonata_write_spike_populations() {
+    sonata_report.write_spike_populations();
+}
+
+void sonata_close_spikefile() {
+    sonata_report.close_spikefile();
 }
 
 // NOT REQUIRED FOR SONATA
