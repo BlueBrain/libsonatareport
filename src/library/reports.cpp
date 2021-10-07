@@ -104,6 +104,22 @@ int sonata_record_data(double step) {
     return 0;
 }
 
+int sonata_write_buffered_data(const char* report_name,
+                               const float* buffered_data,
+                               size_t buffered_data_size,
+                               uint32_t steps_to_write) {
+    if (sonata_report.is_empty()) {
+        return -3;
+    }
+    if (!sonata_report.report_exists(report_name)) {
+        return -1;
+    }
+    const std::vector<float> data(buffered_data, buffered_data + buffered_data_size);
+    auto report = sonata_report.get_report(report_name);
+    report->write_buffered_data(data, steps_to_write);
+    return 0;
+}
+
 int sonata_check_and_flush(double timestep) {
     auto functor = std::mem_fn(&bbp::sonata::Report::check_and_flush);
     sonata_report.apply_all(functor, timestep);

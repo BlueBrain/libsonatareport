@@ -94,6 +94,12 @@ void Report::record_data(double step) {
     }
 }
 
+void Report::write_buffered_data(const std::vector<float>& buffered_data, uint32_t steps_to_write) {
+    for (const auto& sonata_data : sonata_populations_) {
+        sonata_data->write_data(buffered_data, steps_to_write);
+    }
+}
+
 void Report::check_and_flush(double timestep) {
     for (const auto& sonata_data : sonata_populations_) {
         sonata_data->check_and_write(timestep);
@@ -115,7 +121,7 @@ void Report::flush(double time) {
     }
     for (const auto& sonata_data : sonata_populations_) {
         // Write if there are any remaining steps to write
-        sonata_data->write_data();
+        sonata_data->flush();
         if (time - tend_ + dt_ / 2 > 1e-6) {
             if (!report_is_closed_) {
                 sonata_data->close();

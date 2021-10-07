@@ -72,7 +72,8 @@ class SonataData
     void write_spike_populations();
     void add_population(std::unique_ptr<Population>&& population);
 
-    void write_data();
+    void write_data(const std::vector<float>& buffered_data, uint32_t steps_to_write);
+    void flush();
     void close();
 
     bool is_due_to_report(double step) const noexcept;
@@ -106,11 +107,11 @@ class SonataData
     uint32_t steps_to_write_ = 0;
     uint32_t current_step_ = 0;
     uint32_t steps_recorded_ = 0;
-    uint32_t last_position_ = 0;
+    uint32_t previous_position_ = 0;
     uint32_t remaining_steps_ = 0;
     uint32_t reporting_period_ = 0;
-    double last_step_recorded_ = 0.;
-    double last_step_ = 0.;
+    double previous_step_recorded_ = 0.;
+    double final_step_ = 0.;
 
     std::vector<uint64_t> node_ids_;
     std::vector<uint64_t> index_pointers_;
