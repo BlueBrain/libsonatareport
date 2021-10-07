@@ -29,8 +29,8 @@ SonataData::SonataData(const std::string& report_name,
     prepare_buffer(max_buffer_size);
     index_pointers_.resize(nodes->size());
 
-    // Round the time values to avoid conflicts in case of save-restore
-    time_ = {round(tstart / dt) * dt, round(tend / dt) * dt, dt};
+    // Round the tstart value to avoid conflicts in case of save-restore
+    time_ = {round(tstart / dt) * dt, tend, dt};
 
     reporting_period_ = static_cast<int>(dt / SonataReport::atomic_step_);
     last_step_recorded_ = tstart / SonataReport::atomic_step_;
