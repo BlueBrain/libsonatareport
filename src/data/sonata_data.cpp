@@ -41,7 +41,7 @@ SonataData::SonataData(const std::string& report_name)
     : report_name_(report_name)
     , population_name_("All")
     , population_offset_(0)
-    , hdf5_writer_(std::make_unique<HDF5Writer>(report_name)) {}
+    , hdf5_writer_(std::make_unique<HDF5Writer>(report_name)) { }
 
 void SonataData::prepare_buffer(size_t max_buffer_size) {
     logger->trace("Prepare buffer for {}", report_name_);
@@ -148,7 +148,8 @@ void SonataData::record_data(double step) {
     uint32_t local_position = previous_position_;
     if (SonataReport::rank_ == 0) {
         logger->trace(
-            "RANK={} Recording data for step={} previous_step_recorded={} buffer_size={} and offset={}",
+            "RANK={} Recording data for step={} previous_step_recorded={} buffer_size={} and "
+            "offset={}",
             SonataReport::rank_,
             step,
             previous_step_recorded_,
@@ -239,7 +240,7 @@ void SonataData::convert_gids_to_sonata(std::vector<uint64_t>& node_ids,
         std::transform(std::begin(node_ids),
                        std::end(node_ids),
                        std::begin(node_ids),
-                       [& population_offset = population_offset](int x) {
+                       [&population_offset = population_offset](int x) {
                            // Fail if node_id is 0 and input data is reported as 1-based
                            assert(x);
                            return x - population_offset - 1;
@@ -338,7 +339,7 @@ Population::Population(const std::string& population_name,
     , population_offset_(population_offset)
     , order_by_(order_by.empty() ? "by_time" : order_by)
     , spike_timestamps_(spike_timestamps)
-    , spike_node_ids_(spike_node_ids) {}
+    , spike_node_ids_(spike_node_ids) { }
 
 }  // namespace sonata
 }  // namespace bbp
