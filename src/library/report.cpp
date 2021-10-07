@@ -22,9 +22,9 @@ Report::Report(
     , units_(units)
     , max_buffer_size_(default_max_buffer_size)
     , report_is_closed_(false) {
-    // Calculate number of reporting steps
-    double sim_steps = (tend - tstart) / dt;
-    num_steps_ = static_cast<int>(std::ceil(sim_steps));
+    // Calculate number of reporting steps, rounding the tstart value in case of save-restore
+    tstart = round(tstart / dt) * dt;
+    num_steps_ = static_cast<int>(std::ceil((tend - tstart) / dt));
 }
 
 void Report::add_node(const std::string& population_name,
