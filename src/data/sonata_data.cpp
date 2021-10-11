@@ -165,7 +165,7 @@ void SonataData::record_data(double step) {
     previous_step_recorded_ += reporting_period_;
 
     if (current_step_ == steps_to_write_) {
-        write_data(report_buffer_, current_step_);
+        flush();
     }
 }
 
@@ -195,7 +195,7 @@ void SonataData::check_and_write(double timestep) {
                 remaining_steps_,
                 steps_recorded_);
         }
-        write_data(report_buffer_, current_step_);
+        flush();
     }
     steps_recorded_ = 0;
 }
