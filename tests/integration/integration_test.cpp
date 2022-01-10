@@ -213,7 +213,7 @@ int main() {
     const std::string output_dir = ".";
 
     // Create a spike file
-    sonata_create_spikefile(output_dir.data());
+    sonata_create_spikefile(output_dir.data(), "out_test");
 
     std::vector<std::string> population_names{"NodeA", "NodeB"};
     std::vector<uint64_t> population_offsets{0, 1000};

@@ -71,7 +71,7 @@ void sonata_set_min_steps_to_record(int steps);
 /**
  * \brief Create a spike file
  */
-void sonata_create_spikefile(const char* output_dir);
+void sonata_create_spikefile(const char* output_dir, const char* filename);
 
 /**
  * \brief Spike arrays to be written to file
@@ -81,7 +81,8 @@ void sonata_write_spikes(const char* population_name,
                          uint64_t num_timestamps,
                          const int* spike_node_ids,
                          uint64_t num_node_ids,
-                         const char* output_dir);
+                         const char* output_dir,
+                         const char* filename);
 
 /**
  * \brief Add population data to spike report
