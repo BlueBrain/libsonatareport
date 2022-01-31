@@ -62,7 +62,8 @@ class SonataData
                double tstart,
                double tend,
                const std::string& units,
-               std::shared_ptr<nodes_t> nodes);
+               std::shared_ptr<nodes_t> nodes,
+               hid_t file_handler);
 
     SonataData(const std::string& report_name);
 

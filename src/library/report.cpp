@@ -3,6 +3,7 @@
 #include <limits>
 
 #include "../utils/logger.h"
+#include "implementation_interface.hpp"
 #include "report.h"
 #include "sonatareport.h"
 
@@ -25,6 +26,8 @@ Report::Report(
     // Calculate number of reporting steps, rounding the tstart value in case of save-restore
     tstart = round(tstart / dt) * dt;
     num_steps_ = static_cast<int>(std::ceil((tend - tstart) / dt));
+
+    file_handler_ = Implementation::prepare_write(report_name);
 }
 
 void Report::add_node(const std::string& population_name,
@@ -72,7 +75,8 @@ int Report::prepare_dataset() {
                                          tstart_,
                                          tend_,
                                          units_,
-                                         nodes));
+                                         nodes,
+                                         file_handler_));
         sonata_populations_.back()->prepare_dataset();
     }
     return 0;
@@ -117,11 +121,13 @@ void Report::flush(double time) {
         // Write if there are any remaining steps to write
         sonata_data->write_data();
         if (time - tend_ + dt_ / 2 > 1e-6) {
-            if (!report_is_closed_) {
-                sonata_data->close();
-                report_is_closed_ = true;
-            }
+            sonata_data->close();
         }
+    }
+    if (!report_is_closed_) {
+        logger->trace("CLOSING FILE (flush)");
+        H5Fclose(file_handler_);
+        report_is_closed_ = true;
     }
 }
 

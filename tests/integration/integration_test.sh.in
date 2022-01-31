@@ -24,9 +24,8 @@ if [ $exitvalue -ne 0 ]; then
   exit $exitvalue
 fi
 
-#TODO: adapt comparison to any population name (for now All)
-h5diff -c compartment_report.h5 $ref_compartment /report/All/data > diff_compartment.dat 2>&1
-h5diff -c soma_report.h5 $ref_soma /report/All/data > diff_soma.dat 2>&1
+h5diff -c compartment_report.h5 $ref_compartment /report/NodeA/data > diff_compartment.dat 2>&1
+h5diff -c soma_report.h5 $ref_soma /report/NodeB/data > diff_soma.dat 2>&1
 h5diff -c out.h5 $ref_spikes /spikes/NodeA/timestamps > diff_spikes.dat 2>&1
 h5diff -c out.h5 $ref_spikes /spikes/NodeB/node_ids > diff_spikes.dat 2>&1
 

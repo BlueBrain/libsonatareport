@@ -30,8 +30,7 @@ struct Implementation {
     static void close() {
         TImpl::close();
     }
-    static std::tuple<hid_t, hid_t, hid_t, std::string> prepare_write(
-        const std::string& report_name) {
+    static hid_t prepare_write(const std::string& report_name) {
         return TImpl::prepare_write(report_name);
     }
     static hsize_t get_offset(const std::string& report_name, hsize_t value) {
@@ -166,8 +165,7 @@ struct ParallelImplementation {
     };
 
     static void close(){};
-    static std::tuple<hid_t, hid_t, hid_t, std::string> prepare_write(
-        const std::string& report_name) {
+    static hid_t prepare_write(const std::string& report_name) {
         const auto& path_info = IMEUtil::get_path_info(report_name + FILE_EXTENSION);
         MPI_Info info = MPI_INFO_NULL;
 
@@ -180,13 +178,14 @@ struct ParallelImplementation {
         hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
         H5Pset_fapl_mpio(plist_id, get_Comm(report_name), info);
 
-        // Initialize independent/collective lists
-        hid_t collective_list = H5Pcreate(H5P_DATASET_XFER);
-        hid_t independent_list = H5Pcreate(H5P_DATASET_XFER);
-        H5Pset_dxpl_mpio(collective_list, H5FD_MPIO_COLLECTIVE);
-        H5Pset_dxpl_mpio(independent_list, H5FD_MPIO_INDEPENDENT);
+        std::string file_name = path_info.second;
+        if (SonataReport::rank_ == 0) {
+            logger->debug("Creating file '{}'", file_name);
+        }
+        hid_t file_handler = H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+        H5Pclose(plist_id);
 
-        return std::make_tuple(plist_id, collective_list, independent_list, path_info.second);
+        return file_handler;
     };
 
     static hsize_t get_offset(const std::string& report_name, hsize_t value) {
@@ -299,12 +298,11 @@ struct SerialImplementation {
         return 0;
     };
     static void close(){};
-    static std::tuple<hid_t, hid_t, hid_t, std::string> prepare_write(
-        const std::string& report_name) {
-        return std::make_tuple(H5Pcreate(H5P_FILE_ACCESS),
-                               H5Pcreate(H5P_DATASET_XFER),
-                               H5Pcreate(H5P_DATASET_XFER),
-                               report_name + FILE_EXTENSION);
+    static hid_t prepare_write(const std::string& report_name) {
+        hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
+        std::string file_name = report_name + FILE_EXTENSION;
+        hid_t file_handler = H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+        return file_handler;
     }
     static hsize_t get_offset(const std::string& /*report_name*/, hsize_t /*value*/) {
         return 0;

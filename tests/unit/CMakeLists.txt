@@ -20,6 +20,7 @@ target_link_libraries(reports_unit_tests
         Catch2::Catch2
         spdlog::spdlog_header_only
         ${MPI_CXX_LIBRARIES}
+        ${HDF5_C_LIBRARIES}
 )
 
 catch_discover_tests(reports_unit_tests)
