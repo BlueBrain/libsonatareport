@@ -17,18 +17,25 @@ template void HDF5Writer::write<float>(const std::string& dataset_name,
 template void HDF5Writer::write<double>(const std::string& dataset_name,
                                         const std::vector<double>& buffer);
 
+HDF5Writer::HDF5Writer(const std::string& report_name, hid_t file_handler)
+    : report_name_(report_name)
+    , file_(file_handler) {
+    // Initialize independent/collective lists
+    collective_list_ = H5Pcreate(H5P_DATASET_XFER);
+    independent_list_ = H5Pcreate(H5P_DATASET_XFER);
+    H5Pset_dxpl_mpio(collective_list_, H5FD_MPIO_COLLECTIVE);
+    H5Pset_dxpl_mpio(independent_list_, H5FD_MPIO_INDEPENDENT);
+}
+
 HDF5Writer::HDF5Writer(const std::string& report_name)
     : report_name_(report_name) {
-    hid_t plist_id;
-    std::string file_name;
-    std::tie(plist_id, collective_list_, independent_list_, file_name) =
-        Implementation::prepare_write(report_name);
+    file_ = Implementation::prepare_write(report_name);
 
-    if (SonataReport::rank_ == 0) {
-        logger->debug("Creating file '{}'", file_name);
-    }
-
-    file_ = H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+    // Initialize independent/collective lists
+    collective_list_ = H5Pcreate(H5P_DATASET_XFER);
+    independent_list_ = H5Pcreate(H5P_DATASET_XFER);
+    H5Pset_dxpl_mpio(collective_list_, H5FD_MPIO_COLLECTIVE);
+    H5Pset_dxpl_mpio(independent_list_, H5FD_MPIO_INDEPENDENT);
 
     // Create enum type for the ordering of the spikes
     spikes_attr_type_ = H5Tenum_create(H5T_STD_U8LE);
@@ -36,8 +43,6 @@ HDF5Writer::HDF5Writer(const std::string& report_name)
     H5Tenum_insert(spikes_attr_type_, "none", (val = 0, &val));
     H5Tenum_insert(spikes_attr_type_, "by_id", (val = 1, &val));
     H5Tenum_insert(spikes_attr_type_, "by_time", (val = 2, &val));
-
-    H5Pclose(plist_id);
 }
 
 void HDF5Writer::configure_group(const std::string& group_name) {
@@ -180,10 +185,10 @@ void HDF5Writer::close() {
     if (spikes_attr_type_) {
         H5Tclose(spikes_attr_type_);
         spikes_attr_type_ = 0;
-    }
-    if (file_) {
-        H5Fclose(file_);
-        file_ = 0;
+        if (file_) {
+            H5Fclose(file_);
+            file_ = 0;
+        }
     }
 }
 

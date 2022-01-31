@@ -18,13 +18,14 @@ SonataData::SonataData(const std::string& report_name,
                        double tstart,
                        double tend,
                        const std::string& units,
-                       std::shared_ptr<nodes_t> nodes)
+                       std::shared_ptr<nodes_t> nodes,
+                       hid_t file_handler)
     : report_name_(report_name)
     , population_name_(population_name)
     , report_units_(units)
     , population_offset_(population_offset)
     , num_steps_(num_steps)
-    , hdf5_writer_(std::make_unique<HDF5Writer>(report_name))
+    , hdf5_writer_(std::make_unique<HDF5Writer>(report_name, file_handler))
     , nodes_(nodes) {
     prepare_buffer(max_buffer_size);
     index_pointers_.resize(nodes->size());
@@ -44,7 +45,7 @@ SonataData::SonataData(const std::string& report_name)
     , hdf5_writer_(std::make_unique<HDF5Writer>(report_name)) {}
 
 void SonataData::prepare_buffer(size_t max_buffer_size) {
-    logger->trace("Prepare buffer for {}", report_name_);
+    logger->trace("Prepare buffer for {} and population {}", report_name_, population_name_);
 
     for (auto& kv : *nodes_) {
         total_elements_ += kv.second->get_num_elements();
@@ -126,18 +127,13 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
     }
     for (auto& kv : *nodes_) {
         uint64_t current_node_id = kv.second->get_node_id();
-        if (node_ids.size() == nodes_->size()) {
-            // Record every node
+        // Check if node is set to be recorded (found in nodeids)
+        if (std::find(node_ids.begin(), node_ids.end(), current_node_id) != node_ids.end()) {
             kv.second->fill_data(report_buffer_.begin() + local_position);
-        } else {
-            // Check if node is set to be recorded (found in nodeids)
-            if (std::find(node_ids.begin(), node_ids.end(), current_node_id) != node_ids.end()) {
-                kv.second->fill_data(report_buffer_.begin() + local_position);
-            }
+            nodes_recorded_.insert(current_node_id);
         }
         local_position += kv.second->get_num_elements();
     }
-    nodes_recorded_.insert(node_ids.begin(), node_ids.end());
     // Increase steps recorded when all nodes from specific rank has been already recorded
     if (nodes_recorded_.size() == nodes_->size()) {
         steps_recorded_++;
@@ -200,7 +196,9 @@ void SonataData::check_and_write(double timestep) {
 }
 
 void SonataData::prepare_dataset() {
-    logger->trace("Preparing SonataData Dataset for report: {}", report_name_);
+    logger->trace("Preparing SonataData Dataset for report {} and population {}",
+                  report_name_,
+                  population_name_);
     // Prepare /report
     for (auto& kv : *nodes_) {
         // /report

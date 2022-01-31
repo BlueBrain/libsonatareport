@@ -2,6 +2,7 @@
 #include <catch2/catch.hpp>
 #include <data/sonata_data.h>
 #include <iostream>
+#include <library/implementation_interface.hpp>
 #include <memory>
 #ifdef SONATA_REPORT_HAVE_MPI
 #include <mpi.h>
@@ -42,7 +43,9 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
 
             int num_steps = 3;
             size_t max_buffer_size = 1024;
-            auto sonata = std::make_unique<SonataData>("test_sonatadata",
+            std::string report_name = "test_sonatadata";
+            hid_t file_handler = Implementation::prepare_write(report_name);
+            auto sonata = std::make_unique<SonataData>(report_name,
                                                        population_name,
                                                        population_offset,
                                                        max_buffer_size,
@@ -51,7 +54,8 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
                                                        tstart,
                                                        tend,
                                                        report_units,
-                                                       nodes);
+                                                       nodes,
+                                                       file_handler);
             std::vector<uint64_t> nodeids_1 = {101, 142};
             std::vector<uint64_t> nodeids_2 = {102};
 
@@ -62,6 +66,7 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
                 sonata->check_and_write(i);
             }
             sonata->close();
+            H5Fclose(file_handler);
 
             THEN(
                 "The buffer size is the total number of steps times the total number of elements") {
@@ -102,7 +107,9 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
                 {101, node}, {102, node2}, {142, node42}});
             int num_steps = 3;
             size_t max_buffer_size = 128;
-            auto sonata2 = std::make_unique<SonataData>("test_sonatadata2",
+            std::string report_name = "test_sonatadata2";
+            hid_t file_handler = Implementation::prepare_write(report_name);
+            auto sonata2 = std::make_unique<SonataData>(report_name,
                                                         population_name,
                                                         population_offset,
                                                         max_buffer_size,
@@ -111,7 +118,8 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
                                                         tstart,
                                                         tend,
                                                         report_units,
-                                                        nodes);
+                                                        nodes,
+                                                        file_handler);
 
             sonata2->prepare_dataset();
             for (int i = 0; i < num_steps; i++) {
@@ -119,6 +127,7 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
                 sonata2->check_and_write(i);
             }
             sonata2->close();
+            H5Fclose(file_handler);
 
             THEN(
                 "The buffer size is the number of steps to write that fit on the buffer times the "
@@ -133,7 +142,8 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
         std::vector<double> spike_timestamps{0.3, 0.1, 0.2, 1.3, 0.7};
         std::vector<uint64_t> spike_node_ids{3, 5, 2, 3, 2};
         uint64_t population_offset = 0;
-        auto sonata_spikes = std::make_unique<SonataData>("spikes");
+        std::string report_name = "spikes";
+        auto sonata_spikes = std::make_unique<SonataData>(report_name);
         auto sonata_population = std::make_unique<Population>(
             population_name, population_offset, "by_time", spike_timestamps, spike_node_ids);
         Population* pop_p = sonata_population.get();
