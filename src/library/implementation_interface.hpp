@@ -33,6 +33,9 @@ struct Implementation {
     static hid_t prepare_write(const std::string& report_name) {
         return TImpl::prepare_write(report_name);
     }
+    static hid_t initialize_colective() {
+        return TImpl::initialize_colective();
+    }
     static hsize_t get_offset(const std::string& report_name, hsize_t value) {
         return TImpl::get_offset(report_name, value);
     }
@@ -188,6 +191,13 @@ struct ParallelImplementation {
         return file_handler;
     };
 
+    static hid_t initialize_colective() {
+        // Initialize independent/collective lists
+        hid_t collective_list = H5Pcreate(H5P_DATASET_XFER);
+        H5Pset_dxpl_mpio(collective_list, H5FD_MPIO_COLLECTIVE);
+        return collective_list;
+    }
+
     static hsize_t get_offset(const std::string& report_name, hsize_t value) {
         hsize_t offset = 0;
         MPI_Scan(&value, &offset, 1, MPI_UNSIGNED_LONG, MPI_SUM, get_Comm(report_name));
@@ -303,6 +313,9 @@ struct SerialImplementation {
         std::string file_name = report_name + FILE_EXTENSION;
         hid_t file_handler = H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
         return file_handler;
+    }
+    static hid_t initialize_colective() {
+        return H5Pcreate(H5P_DATASET_XFER);
     }
     static hsize_t get_offset(const std::string& /*report_name*/, hsize_t /*value*/) {
         return 0;
