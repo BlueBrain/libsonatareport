@@ -20,22 +20,13 @@ template void HDF5Writer::write<double>(const std::string& dataset_name,
 HDF5Writer::HDF5Writer(const std::string& report_name, hid_t file_handler)
     : report_name_(report_name)
     , file_(file_handler) {
-    // Initialize independent/collective lists
-    collective_list_ = H5Pcreate(H5P_DATASET_XFER);
-    independent_list_ = H5Pcreate(H5P_DATASET_XFER);
-    H5Pset_dxpl_mpio(collective_list_, H5FD_MPIO_COLLECTIVE);
-    H5Pset_dxpl_mpio(independent_list_, H5FD_MPIO_INDEPENDENT);
+    collective_list_ = Implementation::initialize_colective();
 }
 
 HDF5Writer::HDF5Writer(const std::string& report_name)
     : report_name_(report_name) {
     file_ = Implementation::prepare_write(report_name);
-
-    // Initialize independent/collective lists
-    collective_list_ = H5Pcreate(H5P_DATASET_XFER);
-    independent_list_ = H5Pcreate(H5P_DATASET_XFER);
-    H5Pset_dxpl_mpio(collective_list_, H5FD_MPIO_COLLECTIVE);
-    H5Pset_dxpl_mpio(independent_list_, H5FD_MPIO_INDEPENDENT);
+    collective_list_ = Implementation::initialize_colective();
 
     // Create enum type for the ordering of the spikes
     spikes_attr_type_ = H5Tenum_create(H5T_STD_U8LE);

@@ -87,8 +87,6 @@ std::vector<uint64_t> generate_data(std::vector<Neuron>& neurons,
 }
 
 void init(const char* report_name,
-          const char* population_name,
-          uint64_t population_offset,
           double tstart,
           double tstop,
           double dt,
