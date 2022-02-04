@@ -78,7 +78,14 @@ std::vector<uint64_t> generate_data(std::vector<Neuron>& neurons,
             tmp_neuron.population_name = "NodeB";
             tmp_neuron.population_offset = 0;
         }
+        /*if (seed == 0) {
+            tmp_neuron.population_name = "NodeA";
+            tmp_neuron.population_offset = 1000;
 
+        } else {
+            tmp_neuron.population_name = "NodeB";
+            tmp_neuron.population_offset = 0;
+        }*/
         // element or soma
         generate_elements(tmp_neuron, seed);
         neurons.push_back(tmp_neuron);
@@ -128,7 +135,7 @@ void print_data(std::vector<Neuron>& neurons) {
 }
 
 int main() {
-    logger->set_level(spdlog::level::trace);
+    logger->set_level(spdlog::level::debug);
     int global_rank = 0;
     int global_size = 1;
 #ifdef SONATA_REPORT_HAVE_MPI

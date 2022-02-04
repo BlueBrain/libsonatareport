@@ -26,8 +26,6 @@ Report::Report(
     // Calculate number of reporting steps, rounding the tstart value in case of save-restore
     tstart = round(tstart / dt) * dt;
     num_steps_ = static_cast<int>(std::ceil((tend - tstart) / dt));
-
-    file_handler_ = Implementation::prepare_write(report_name);
 }
 
 void Report::add_node(const std::string& population_name,
@@ -63,12 +61,35 @@ std::shared_ptr<Node> Report::get_node(const std::string& population_name, uint6
 }
 
 int Report::prepare_dataset() {
+    Implementation::add_communicator(report_name_);
+    file_handler_ = Implementation::prepare_write(report_name_);
+
+    std::vector<std::string> local_populations;
+    std::transform(begin(*populations_), end(*populations_), back_inserter(local_populations), [](auto const& pair) {
+        return pair.first;
+    });
+
+    std::vector<std::string> global_populations = Implementation::sync_populations(local_populations);
+
+    for(const auto& population: global_populations) {
+        logger->debug("Rank {} - population {}", SonataReport::rank_, population);
+    }
+
+    if (SonataReport::rank_ == 0) {
+        std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>();
+        populations_->emplace("NodeB", nodes);
+    } else {
+        std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>();
+        populations_->emplace("NodeA", nodes);
+    }
+
     for (const auto& population : *populations_) {
+        const std::string& population_name = population.first;
         std::shared_ptr<nodes_t> nodes = population.second;
         sonata_populations_.push_back(
             std::make_unique<SonataData>(report_name_,
-                                         population.first,
-                                         population_offsets_[population.first],
+                                         population_name,
+                                         population_offsets_[population_name],
                                          max_buffer_size_,
                                          num_steps_,
                                          dt_,
@@ -125,7 +146,9 @@ void Report::flush(double time) {
         }
     }
     if (!report_is_closed_) {
-        logger->trace("CLOSING FILE (flush)");
+        if (SonataReport::rank_ == 0) {
+            logger->debug("CLOSING report's file {}", report_name_);
+        }
         H5Fclose(file_handler_);
         report_is_closed_ = true;
     }

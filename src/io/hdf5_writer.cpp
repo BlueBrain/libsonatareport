@@ -69,7 +69,6 @@ void HDF5Writer::configure_attribute(const std::string& dataset_name,
 void HDF5Writer::configure_enum_attribute(const std::string& group_name,
                                           const std::string& attribute_name,
                                           const std::string& attribute_value) {
-    logger->trace("Configuring attribute '{}' for group name '{}'", attribute_name, group_name);
     hid_t group_id = H5Gopen(file_, group_name.data(), H5P_DEFAULT);
     hid_t attr_space = H5Screate(H5S_SCALAR);
 
@@ -127,6 +126,9 @@ void HDF5Writer::write_2D(const std::vector<float>& buffer,
 
 template <typename T>
 void HDF5Writer::write(const std::string& dataset_name, const std::vector<T>& buffer) {
+    if (SonataReport::rank_ == 0) {
+        logger->debug("WRITING dataset {} in report {}", dataset_name, report_name_);
+    }
     hsize_t dims = buffer.size();
     hid_t type = h5typemap::get_h5_type(T(0));
 
