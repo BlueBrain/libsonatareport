@@ -32,7 +32,7 @@ SonataData::SonataData(const std::string& report_name,
 
     // Round the tstart value to avoid conflicts in case of save-restore
     time_ = {round(tstart / dt) * dt, tend, dt};
-
+    file_handler_ = file_handler;
     reporting_period_ = static_cast<int>(dt / SonataReport::atomic_step_);
     last_step_recorded_ = tstart / SonataReport::atomic_step_;
     last_step_ = tend / SonataReport::atomic_step_;
@@ -52,13 +52,14 @@ void SonataData::prepare_buffer(size_t max_buffer_size) {
     }
 
     // Nothing to prepare as there is no element in those nodes
-    if (total_elements_ == 0) {
+    /*if (total_elements_ == 0) {
         return;
-    }
+    }*/
 
     // Calculate the timesteps that fit given the buffer size
     {
-        uint32_t max_steps_to_write = max_buffer_size / (sizeof(float) * total_elements_);
+        uint32_t max_steps_to_write = (total_elements_ == 0) ? std::numeric_limits<uint32_t>::max()
+                                                             : max_buffer_size / (sizeof(float) * total_elements_);
         uint32_t common_max_steps_to_write =
             Implementation::get_max_steps_to_write(report_name_, max_steps_to_write);
         if (common_max_steps_to_write < num_steps_) {  // More steps asked that buffer can contain
@@ -113,18 +114,20 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
     // Calculate the offset to write into the buffer
     uint32_t offset = static_cast<uint32_t>((step - last_step_recorded_) / reporting_period_);
     uint32_t local_position = last_position_ + total_elements_ * offset;
-    if (SonataReport::rank_ == 0) {
+    //if (SonataReport::rank_ == 0) {
         logger->trace(
-            "RANK={} Recording data for step={} last_step_recorded={} first node_id={} "
+            "RANK={} Recording data for population {}, step={} last_step_recorded={} steps recorded {} first node_id={} "
             "buffer_size={} "
             "and offset={}",
             SonataReport::rank_,
+            population_name_,
             step,
             last_step_recorded_,
+            steps_recorded_,
             node_ids[0],
             report_buffer_.size(),
             local_position);
-    }
+    //}
     for (auto& kv : *nodes_) {
         uint64_t current_node_id = kv.second->get_node_id();
         // Check if node is set to be recorded (found in nodeids)
@@ -134,6 +137,8 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
         }
         local_position += kv.second->get_num_elements();
     }
+
+    logger->trace("nodes recorded {}  nodes_ size {}", nodes_recorded_.size(), nodes_->size());
     // Increase steps recorded when all nodes from specific rank has been already recorded
     if (nodes_recorded_.size() == nodes_->size()) {
         steps_recorded_++;
@@ -176,45 +181,60 @@ void SonataData::check_and_write(double timestep) {
     last_position_ += total_elements_ * steps_recorded_;
     last_step_recorded_ += reporting_period_ * steps_recorded_;
     nodes_recorded_.clear();
+    logger->debug(
+                "Rank {} - steps_to_write={}, current_step={}, remaining_steps={} "
+                "steps_recorded={} and population {}",
+                SonataReport::rank_,
+                steps_to_write_,
+                current_step_,
+                remaining_steps_,
+                steps_recorded_, population_name_);
     // Write when buffer is full, finish all remaining recordings or when record several steps in a
     // row
     if (current_step_ == steps_to_write_ || current_step_ == remaining_steps_ ||
         steps_recorded_ > 1) {
-        if (SonataReport::rank_ == 0) {
+        //if (SonataReport::rank_ == 0) {
             logger->debug(
-                "Writing to file {}! steps_to_write={}, current_step={}, remaining_steps={} "
-                "steps_recorded={}",
+                "Rank {} -Writing to file {}! steps_to_write={}, current_step={}, remaining_steps={} "
+                "steps_recorded={} and population {}",
+                SonataReport::rank_,
                 report_name_,
                 steps_to_write_,
                 current_step_,
                 remaining_steps_,
-                steps_recorded_);
-        }
+                steps_recorded_, population_name_);
+        //}
         write_data();
     }
     steps_recorded_ = 0;
 }
 
 void SonataData::prepare_dataset() {
-    logger->trace("Preparing SonataData Dataset for report {} and population {}",
+    logger->trace("Preparing SonataData Dataset for report {} and population {} and rank {}",
                   report_name_,
-                  population_name_);
+                  population_name_,
+                  SonataReport::rank_);
     // Prepare /report
     for (auto& kv : *nodes_) {
+        logger->trace("Node_id: {}", kv.second->get_node_id());
         // /report
         const std::vector<uint32_t> element_ids = kv.second->get_element_ids();
         element_ids_.insert(element_ids_.end(), element_ids.begin(), element_ids.end());
         node_ids_.push_back(kv.second->get_node_id());
     }
     int element_offset = Implementation::get_offset(report_name_, total_elements_);
-    logger->trace("Total elements are: {} and element offset is: {}",
+    logger->trace("Rank {} - Total elements are: {} and element offset is: {}",
+                  SonataReport::rank_,
                   total_elements_,
                   element_offset);
 
-    int last_rank = Implementation::get_last_rank(report_name_, SonataReport::rank_);
+    int last_writer = (total_elements_ == 0) ? 0 : SonataReport::rank_;
+    int last_rank = Implementation::get_last_rank(report_name_, last_writer);
     if (SonataReport::rank_ == last_rank) {
         index_pointers_.resize(nodes_->size() + 1);
     }
+
+    logger->trace("Rank {} - After last rank", SonataReport::rank_);
 
     // Prepare index pointers
     if (!index_pointers_.empty()) {
@@ -225,10 +245,12 @@ void SonataData::prepare_dataset() {
         index_pointers_[i] = index_pointers_[i - 1] +
                              nodes_->at(previous_node_id)->get_num_elements();
     }
+
+    logger->trace("Rank {} - After index pointers", SonataReport::rank_);
     // We only write the headers if there are elements to write
-    if (total_elements_ > 0) {
+    //if (total_elements_ > 0) {
         write_report_header();
-    }
+    //}
 }
 
 void SonataData::convert_gids_to_sonata(std::vector<uint64_t>& node_ids,
@@ -247,23 +269,32 @@ void SonataData::convert_gids_to_sonata(std::vector<uint64_t>& node_ids,
 
 void SonataData::write_report_header() {
     // TODO: remove configure_group and add it to write_any()
-    logger->trace("Writing REPORT header for {}", population_name_);
+    logger->trace("Rank {} - Writing REPORT header for {}", SonataReport::rank_, population_name_);
     const std::string reports_population_group = "/report/" + population_name_;
     hdf5_writer_->configure_group("/report");
+    MPI_Barrier(MPI_COMM_WORLD);
     hdf5_writer_->configure_group(reports_population_group);
+    MPI_Barrier(MPI_COMM_WORLD);
     hdf5_writer_->configure_group(reports_population_group + "/mapping");
-    hdf5_writer_->configure_dataset(reports_population_group + "/data",
+    MPI_Barrier(MPI_COMM_WORLD);
+    hdf5_writer_->configure_dataset(reports_population_group + "/data", population_name_,
                                     num_steps_,
                                     total_elements_);
+    MPI_Barrier(MPI_COMM_WORLD);
     hdf5_writer_->configure_attribute(reports_population_group + "/data", "units", report_units_);
 
     std::vector<uint64_t> sonata_node_ids(node_ids_);
     convert_gids_to_sonata(sonata_node_ids, population_offset_);
-    hdf5_writer_->write(reports_population_group + "/mapping/node_ids", sonata_node_ids);
-    hdf5_writer_->write(reports_population_group + "/mapping/index_pointers", index_pointers_);
-    hdf5_writer_->write(reports_population_group + "/mapping/element_ids", element_ids_);
+    hdf5_writer_->write(reports_population_group + "/mapping/node_ids", population_name_, sonata_node_ids);
+    MPI_Barrier(MPI_COMM_WORLD);
+    hdf5_writer_->write(reports_population_group + "/mapping/index_pointers", population_name_, index_pointers_);
+    MPI_Barrier(MPI_COMM_WORLD);
+    hdf5_writer_->write(reports_population_group + "/mapping/element_ids", population_name_, element_ids_);
+    MPI_Barrier(MPI_COMM_WORLD);
     hdf5_writer_->write_time(reports_population_group + "/mapping/time", time_);
+    MPI_Barrier(MPI_COMM_WORLD);
     hdf5_writer_->configure_attribute(reports_population_group + "/mapping/time", "units", "ms");
+    MPI_Barrier(MPI_COMM_WORLD);
 }
 
 void SonataData::write_spikes_header(Population& population) {
@@ -282,13 +313,13 @@ void SonataData::write_spikes_header(Population& population) {
     Implementation::sort_spikes(population.get_spike_timestamps(),
                                 population.get_spike_node_ids(),
                                 order_by);
-    hdf5_writer_->write(spikes_population_group + "/timestamps", population.get_spike_timestamps());
+    hdf5_writer_->write(spikes_population_group + "/timestamps", population.get_population_name(), population.get_spike_timestamps());
     if (timestamps_size > 0) {
         hdf5_writer_->configure_attribute(spikes_population_group + "/timestamps", "units", "ms");
     }
     std::vector<uint64_t> sonata_spike_node_ids(population.get_spike_node_ids());
     convert_gids_to_sonata(sonata_spike_node_ids, population.get_population_offset());
-    hdf5_writer_->write(spikes_population_group + "/node_ids", sonata_spike_node_ids);
+    hdf5_writer_->write(spikes_population_group + "/node_ids", population.get_population_name(), sonata_spike_node_ids);
 }
 
 void SonataData::add_population(std::unique_ptr<Population>&& population) {

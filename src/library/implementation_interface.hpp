@@ -30,6 +30,9 @@ struct Implementation {
     static void close() {
         TImpl::close();
     }
+    static void add_communicator(const std::string& comm_name) {
+        return TImpl::add_communicator(comm_name);
+    }
     static hid_t prepare_write(const std::string& report_name) {
         return TImpl::prepare_write(report_name);
     }
@@ -93,10 +96,10 @@ static void local_spikevec_sort(std::vector<double>& isvect,
 
 #ifdef SONATA_REPORT_HAVE_MPI
 
-static MPI_Comm get_Comm(const std::string& report_name) {
-    if (SonataReport::communicators_.find(report_name) != SonataReport::communicators_.end()) {
+static MPI_Comm get_Comm(const std::string& comm_name) {
+    if (SonataReport::communicators_.find(comm_name) != SonataReport::communicators_.end()) {
         // Found
-        return SonataReport::communicators_[report_name];
+        return SonataReport::communicators_[comm_name];
     }
     return MPI_COMM_WORLD;
 }
@@ -104,12 +107,12 @@ static MPI_Comm get_Comm(const std::string& report_name) {
 struct ParallelImplementation {
     static int init(const std::vector<std::string>& report_names) {
         // size_t MPI type
-        MPI_Datatype mpi_size_type = MPI_UINT64_T;
+        /*MPI_Datatype mpi_size_type = MPI_UINT64_T;
         if (sizeof(size_t) == 4) {
             mpi_size_type = MPI_UINT32_T;
-        }
+        }*/
 
-        int global_rank, global_size, local_size;
+        int global_rank, global_size;//, local_size;
         MPI_Comm_rank(MPI_COMM_WORLD, &global_rank);
         MPI_Comm_size(MPI_COMM_WORLD, &global_size);
 
@@ -119,7 +122,15 @@ struct ParallelImplementation {
         // Create a first communicator with the ranks with at least 1 report
         int num_reports = report_names.size();
         MPI_Comm_split(MPI_COMM_WORLD, num_reports == 0, 0, &SonataReport::has_nodes_);
-        MPI_Comm_size(SonataReport::has_nodes_, &local_size);
+
+        int row_rank, row_size;
+        MPI_Comm_rank(SonataReport::has_nodes_, &row_rank);
+        MPI_Comm_size(SonataReport::has_nodes_, &row_size);
+
+        printf("WORLD RANK/SIZE: %d/%d \t ROW RANK/SIZE: %d/%d\n",
+            global_rank, global_size, row_rank, row_size);
+
+        /*MPI_Comm_size(SonataReport::has_nodes_, &local_size);
 
         // Send report numbers and generate offset array for allgatherv
         std::vector<int> report_sizes(local_size);
@@ -162,12 +173,35 @@ struct ParallelImplementation {
                                      elem) != local_report_hashes.end(),
                            0,
                            &SonataReport::communicators_[hash_report_names[elem]]);
-        }
+        }*/
 
         return global_rank;
     };
 
     static void close(){};
+
+    static void add_communicator(const std::string& comm_name) {
+        printf("add_communicator() with name %s\n", comm_name.data());
+        std::hash<std::string> hasher;
+        size_t report_hash = hasher(comm_name);
+        if ( SonataReport::communicators_.find(comm_name) == SonataReport::communicators_.end() ) {
+            MPI_Comm_split(SonataReport::has_nodes_,
+                            report_hash,
+                            0,
+                            &SonataReport::communicators_[comm_name]);
+            int global_rank, global_size;//, local_size;
+            MPI_Comm_rank(SonataReport::has_nodes_, &global_rank);
+            MPI_Comm_size(SonataReport::has_nodes_, &global_size);
+
+            int row_rank, row_size;
+            MPI_Comm_rank(SonataReport::communicators_[comm_name], &row_rank);
+            MPI_Comm_size(SonataReport::communicators_[comm_name], &row_size);
+
+            printf("Added! %s WORLD RANK/SIZE: %d/%d \t ROW RANK/SIZE: %d/%d\n",
+                comm_name.data(), global_rank, global_size, row_rank, row_size);
+        }
+    };
+
     static hid_t prepare_write(const std::string& report_name) {
         const auto& path_info = IMEUtil::get_path_info(report_name + FILE_EXTENSION);
         MPI_Info info = MPI_INFO_NULL;
@@ -198,28 +232,28 @@ struct ParallelImplementation {
         return collective_list;
     }
 
-    static hsize_t get_offset(const std::string& report_name, hsize_t value) {
+    static hsize_t get_offset(const std::string& comm_name, hsize_t value) {
         hsize_t offset = 0;
-        MPI_Scan(&value, &offset, 1, MPI_UNSIGNED_LONG, MPI_SUM, get_Comm(report_name));
+        MPI_Scan(&value, &offset, 1, MPI_UNSIGNED_LONG, MPI_SUM, get_Comm(comm_name));
         offset -= value;
         return offset;
     };
 
-    static int get_last_rank(const std::string& report_name, int value) {
+    static int get_last_rank(const std::string& comm_name, int value) {
         int last_rank = 0;
-        MPI_Allreduce(&value, &last_rank, 1, MPI_INT, MPI_MAX, get_Comm(report_name));
+        MPI_Allreduce(&value, &last_rank, 1, MPI_INT, MPI_MAX, get_Comm(comm_name));
         return last_rank;
     }
 
-    static hsize_t get_global_dims(const std::string& report_name, hsize_t value) {
+    static hsize_t get_global_dims(const std::string& comm_name, hsize_t value) {
         hsize_t global_dims = value;
-        MPI_Allreduce(&value, &global_dims, 1, MPI_UNSIGNED_LONG, MPI_SUM, get_Comm(report_name));
+        MPI_Allreduce(&value, &global_dims, 1, MPI_UNSIGNED_LONG, MPI_SUM, get_Comm(comm_name));
         return global_dims;
     };
 
-    static uint32_t get_max_steps_to_write(const std::string& report_name, uint32_t value) {
+    static uint32_t get_max_steps_to_write(const std::string& comm_name, uint32_t value) {
         uint32_t max_steps_to_write = value;
-        MPI_Allreduce(&value, &max_steps_to_write, 1, MPI_UNSIGNED, MPI_MIN, get_Comm(report_name));
+        MPI_Allreduce(&value, &max_steps_to_write, 1, MPI_UNSIGNED, MPI_MIN, get_Comm(comm_name));
         return max_steps_to_write;
     };
 
@@ -308,6 +342,7 @@ struct SerialImplementation {
         return 0;
     };
     static void close(){};
+    static void add_communicator(const std::string& comm_name) {};
     static hid_t prepare_write(const std::string& report_name) {
         hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
         std::string file_name = report_name + FILE_EXTENSION;

@@ -26,8 +26,6 @@ Report::Report(
     // Calculate number of reporting steps, rounding the tstart value in case of save-restore
     tstart = round(tstart / dt) * dt;
     num_steps_ = static_cast<int>(std::ceil((tend - tstart) / dt));
-
-    file_handler_ = Implementation::prepare_write(report_name);
 }
 
 void Report::add_node(const std::string& population_name,
@@ -61,14 +59,59 @@ bool Report::population_exists(const std::string& population_name) const {
 std::shared_ptr<Node> Report::get_node(const std::string& population_name, uint64_t node_id) const {
     return populations_->at(population_name)->at(node_id);
 }
+void print_comm_ranks(MPI_Comm comm)
+{
+   MPI_Group grp, world_grp;
+
+   MPI_Comm_group(MPI_COMM_WORLD, &world_grp);
+   MPI_Comm_group(comm, &grp);
+
+   int grp_size;
+
+   MPI_Group_size(grp, &grp_size);
+
+   int *ranks = (int*)malloc(grp_size * sizeof(int));
+   int *world_ranks =(int*) malloc(grp_size * sizeof(int));
+
+   for (int i = 0; i < grp_size; i++)
+      ranks[i] = i;
+
+   MPI_Group_translate_ranks(grp, grp_size, ranks, world_grp, world_ranks);
+
+   for (int i = 0; i < grp_size; i++)
+      printf("comm[%d] has world rank %d\n", i, world_ranks[i]);
+
+   free(ranks); free(world_ranks);
+
+   MPI_Group_free(&grp);
+   MPI_Group_free(&world_grp);
+}
 
 int Report::prepare_dataset() {
+    Implementation::add_communicator(report_name_);
+    file_handler_ = Implementation::prepare_write(report_name_);
+    
     for (const auto& population : *populations_) {
+        const std::string& population_name = population.first;
+        std::string comm_name = report_name_ + "_" + population_name;
+        Implementation::add_communicator(comm_name);
+    }
+    if (SonataReport::rank_ == 0) {
+        std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>();
+        populations_->emplace("NodeB", nodes);
+    } else {
+        std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>();
+        populations_->emplace("NodeA", nodes);
+    }
+    for (const auto& population : *populations_) {
+        const std::string& population_name = population.first;
+        /*std::string comm_name = report_name_ + "_" + population_name;
+        Implementation::add_communicator(comm_name);*/
         std::shared_ptr<nodes_t> nodes = population.second;
         sonata_populations_.push_back(
             std::make_unique<SonataData>(report_name_,
-                                         population.first,
-                                         population_offsets_[population.first],
+                                         population_name,
+                                         population_offsets_[population_name],
                                          max_buffer_size_,
                                          num_steps_,
                                          dt_,
@@ -78,14 +121,21 @@ int Report::prepare_dataset() {
                                          nodes,
                                          file_handler_));
         sonata_populations_.back()->prepare_dataset();
+        MPI_Barrier(MPI_COMM_WORLD);
     }
+    print_comm_ranks(SonataReport::has_nodes_);
+    MPI_Barrier(MPI_COMM_WORLD);
+    //H5Fclose(file_handler_);
+    //MPI_Abort(MPI_COMM_WORLD, 0);
     return 0;
 }
 
 void Report::record_data(double step, const std::vector<uint64_t>& node_ids) {
     for (const auto& sonata_data : sonata_populations_) {
+        logger->trace("Rank {} - is due to report?", SonataReport::rank_);
         if (sonata_data->is_due_to_report(step)) {
             sonata_data->record_data(step, node_ids);
+            MPI_Barrier(MPI_COMM_WORLD);
         }
     }
 }
@@ -101,6 +151,7 @@ void Report::record_data(double step) {
 void Report::check_and_flush(double timestep) {
     for (const auto& sonata_data : sonata_populations_) {
         sonata_data->check_and_write(timestep);
+        MPI_Barrier(MPI_COMM_WORLD);
     }
 }
 

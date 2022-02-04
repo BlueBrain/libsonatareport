@@ -8,13 +8,13 @@
 namespace bbp {
 namespace sonata {
 
-template void HDF5Writer::write<uint32_t>(const std::string& dataset_name,
+template void HDF5Writer::write<uint32_t>(const std::string& dataset_name, const std::string& population_name,
                                           const std::vector<uint32_t>& buffer);
-template void HDF5Writer::write<uint64_t>(const std::string& dataset_name,
+template void HDF5Writer::write<uint64_t>(const std::string& dataset_name, const std::string& population_name,
                                           const std::vector<uint64_t>& buffer);
-template void HDF5Writer::write<float>(const std::string& dataset_name,
+template void HDF5Writer::write<float>(const std::string& dataset_name, const std::string& population_name,
                                        const std::vector<float>& buffer);
-template void HDF5Writer::write<double>(const std::string& dataset_name,
+template void HDF5Writer::write<double>(const std::string& dataset_name, const std::string& population_name,
                                         const std::vector<double>& buffer);
 
 HDF5Writer::HDF5Writer(const std::string& report_name, hid_t file_handler)
@@ -85,6 +85,7 @@ void HDF5Writer::configure_enum_attribute(const std::string& group_name,
 }
 
 void HDF5Writer::configure_dataset(const std::string& dataset_name,
+                                   const std::string& population_name,
                                    uint32_t total_steps,
                                    uint32_t total_elements) {
     std::array<hsize_t, 2> dims = {total_steps,
@@ -126,12 +127,13 @@ void HDF5Writer::write_2D(const std::vector<float>& buffer,
 }
 
 template <typename T>
-void HDF5Writer::write(const std::string& dataset_name, const std::vector<T>& buffer) {
+void HDF5Writer::write(const std::string& dataset_name, const std::string& population_name, const std::vector<T>& buffer) {
     hsize_t dims = buffer.size();
     hid_t type = h5typemap::get_h5_type(T(0));
 
     hsize_t global_dims = Implementation::get_global_dims(report_name_, dims);
     hsize_t offset = Implementation::get_offset(report_name_, dims);
+    logger->trace("Rank {} - Writing datas4et {} with global dims {} and in offset {}", SonataReport::rank_, dataset_name, global_dims, offset);
 
     hid_t data_space = H5Screate_simple(1, &global_dims, nullptr);
     hid_t data_set = H5Dcreate(
@@ -141,9 +143,9 @@ void HDF5Writer::write(const std::string& dataset_name, const std::vector<T>& bu
     hid_t memspace = H5Screate_simple(1, &dims, nullptr);
     H5Sselect_hyperslab(filespace, H5S_SELECT_SET, &offset, nullptr, &dims, nullptr);
 
-    if (global_dims > 0) {
+    //if (global_dims > 0) {
         H5Dwrite(data_set, type, memspace, filespace, collective_list_, buffer.data());
-    }
+    //}
 
     H5Sclose(memspace);
     H5Sclose(filespace);

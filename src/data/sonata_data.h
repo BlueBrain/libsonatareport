@@ -113,6 +113,8 @@ class SonataData
     double last_step_recorded_ = 0.;
     double last_step_ = 0.;
 
+    hid_t file_handler_ = 0;
+
     std::vector<uint64_t> node_ids_;
     std::vector<uint64_t> index_pointers_;
     std::vector<uint32_t> element_ids_;
