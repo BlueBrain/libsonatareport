@@ -177,7 +177,8 @@ struct ParallelImplementation {
             buffer.resize(buffer_sizes);
         }
 
-        MPI_Gatherv(buffer.data(),
+        auto send_buffer_ptr = (SonataReport::rank_ == 0) ? MPI_IN_PLACE : buffer.data();
+        MPI_Gatherv(send_buffer_ptr,
                     buffer_size,
                     MPI_CHAR,
                     buffer.data(),
