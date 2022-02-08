@@ -344,9 +344,9 @@ struct SerialImplementation {
         return 0;
     };
     static void close(){};
-    static void add_communicator(const std::string& comm_name){};
+    static void add_communicator(const std::string& /*comm_nam*/){};
     static std::vector<std::string> sync_populations(
-        const std::string& comm_name, const std::vector<std::string>& local_populations) {
+        const std::string& /*comm_name*/, const std::vector<std::string>& local_populations) {
         return local_populations;
     };
     static hid_t prepare_write(const std::string& report_name) {
