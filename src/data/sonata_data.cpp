@@ -45,7 +45,9 @@ SonataData::SonataData(const std::string& report_name)
 
 void SonataData::prepare_buffer(size_t max_buffer_size) {
     if (SonataReport::rank_ == 0) {
-        logger->debug("PREPARING BUFFER for report {} and population {}", report_name_, population_name_);
+        logger->debug("PREPARING BUFFER for report {} and population {}",
+                      report_name_,
+                      population_name_);
     }
 
     for (auto& kv : *nodes_) {
@@ -55,8 +57,9 @@ void SonataData::prepare_buffer(size_t max_buffer_size) {
     // Calculate the timesteps that fit given the buffer size
     {
         // Ranks without elements still need to participate in the writings
-        uint32_t max_steps_to_write = (total_elements_ == 0) ? std::numeric_limits<uint32_t>::max()
-                                                             : max_buffer_size / (sizeof(float) * total_elements_);
+        uint32_t max_steps_to_write = (total_elements_ == 0)
+                                          ? std::numeric_limits<uint32_t>::max()
+                                          : max_buffer_size / (sizeof(float) * total_elements_);
         uint32_t common_max_steps_to_write =
             Implementation::get_max_steps_to_write(report_name_, max_steps_to_write);
         if (common_max_steps_to_write < num_steps_) {  // More steps asked that buffer can contain
@@ -113,7 +116,8 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
     uint32_t local_position = last_position_ + total_elements_ * offset;
     if (SonataReport::rank_ == 0) {
         logger->trace(
-            "Recording data for population {}, step={} last_step_recorded={} steps recorded {} first node_id={} "
+            "Recording data for population {}, step={} last_step_recorded={} steps recorded {} "
+            "first node_id={} "
             "buffer_size={} "
             "and offset={}",
             population_name_,
@@ -169,7 +173,10 @@ void SonataData::check_and_write(double timestep) {
     }
 
     if (SonataReport::rank_ == 0) {
-        logger->debug("UPDATING timestep t={} for report {} and population {}", timestep, report_name_, population_name_);
+        logger->debug("UPDATING timestep t={} for report {} and population {}",
+                      timestep,
+                      report_name_,
+                      population_name_);
     }
     current_step_ += steps_recorded_;
     last_position_ += total_elements_ * steps_recorded_;
@@ -182,7 +189,8 @@ void SonataData::check_and_write(double timestep) {
         steps_recorded_ > 1) {
         if (SonataReport::rank_ == 0) {
             logger->trace(
-                "Writing to file {}! population {} steps_to_write={}, current_step={}, remaining_steps={} "
+                "Writing to file {}! population {} steps_to_write={}, current_step={}, "
+                "remaining_steps={} "
                 "steps_recorded={}",
                 report_name_,
                 population_name_,
@@ -198,7 +206,9 @@ void SonataData::check_and_write(double timestep) {
 
 void SonataData::prepare_dataset() {
     if (SonataReport::rank_ == 0) {
-        logger->debug("PREPARING HEADER for report {} and population {}", report_name_, population_name_);
+        logger->debug("PREPARING HEADER for report {} and population {}",
+                      report_name_,
+                      population_name_);
     }
     // Prepare /report
     for (auto& kv : *nodes_) {
@@ -310,10 +320,14 @@ void SonataData::write_data() {
     if (current_step_ >= remaining_steps_) {  // Avoid writing out of bounds
         current_step_ = remaining_steps_;
     }
+    if (SonataReport::rank_ == 0) {
+        logger->debug("WRITING timestep data to file {} in population {}",
+                      report_name_,
+                      population_name_);
+    }
     hdf5_writer_->write_2D(report_buffer_, current_step_, total_elements_);
     remaining_steps_ -= current_step_;
     if (SonataReport::rank_ == 0) {
-        logger->debug("WRITING timestep data to file {} in population {}", report_name_, population_name_);
         logger->debug("\t-Steps written: {}", current_step_);
         logger->debug("\t-Remaining steps: {}", remaining_steps_);
     }

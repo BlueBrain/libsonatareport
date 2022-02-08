@@ -78,14 +78,6 @@ std::vector<uint64_t> generate_data(std::vector<Neuron>& neurons,
             tmp_neuron.population_name = "NodeB";
             tmp_neuron.population_offset = 0;
         }
-        /*if (seed == 0) {
-            tmp_neuron.population_name = "NodeA";
-            tmp_neuron.population_offset = 1000;
-
-        } else {
-            tmp_neuron.population_name = "NodeB";
-            tmp_neuron.population_offset = 0;
-        }*/
         // element or soma
         generate_elements(tmp_neuron, seed);
         neurons.push_back(tmp_neuron);

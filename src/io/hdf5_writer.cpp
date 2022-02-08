@@ -105,19 +105,17 @@ void HDF5Writer::configure_dataset(const std::string& dataset_name,
 void HDF5Writer::write_2D(const std::vector<float>& buffer,
                           uint32_t steps_to_write,
                           uint32_t total_elements) {
-    std::array<hsize_t, 2> count = {steps_to_write, total_elements};
+    hsize_t dims = buffer.size();
+    hsize_t global_dims = Implementation::get_global_dims(report_name_, dims);
 
+    std::array<hsize_t, 2> count = {steps_to_write, total_elements};
     hid_t memspace = H5Screate_simple(2, count.data(), nullptr);
     hid_t filespace = H5Dget_space(dataset_);
 
     H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset_.data(), nullptr, count.data(), nullptr);
-    /*for(int i=0; i<steps_to_write; i++) {
-        if(i==0)
-            H5Sselect_hyperslab(space, H5S_SELECT_SET, &offset_[i], NULL, &count[i], NULL);
-        H5Sselect_hyperslab(space, H5S_SELECT_OR, &offset_[i], NULL, &count[i], NULL);
-    }*/
-
-    H5Dwrite(dataset_, H5T_NATIVE_FLOAT, memspace, filespace, collective_list_, buffer.data());
+    if (global_dims > 0) {
+        H5Dwrite(dataset_, H5T_NATIVE_FLOAT, memspace, filespace, collective_list_, buffer.data());
+    }
     offset_[0] += steps_to_write;
 
     H5Sclose(filespace);

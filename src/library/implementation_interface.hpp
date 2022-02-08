@@ -33,8 +33,9 @@ struct Implementation {
     static void add_communicator(const std::string& comm_name) {
         return TImpl::add_communicator(comm_name);
     }
-    static std::vector<std::string> sync_populations(const std::vector<std::string>& local_populations) {
-        return TImpl::sync_populations(local_populations);
+    static std::vector<std::string> sync_populations(
+        const std::string& comm_name, const std::vector<std::string>& local_populations) {
+        return TImpl::sync_populations(comm_name, local_populations);
     }
     static hid_t prepare_write(const std::string& report_name) {
         return TImpl::prepare_write(report_name);
@@ -109,7 +110,6 @@ static MPI_Comm get_Comm(const std::string& comm_name) {
 
 struct ParallelImplementation {
     static int init(const std::vector<std::string>& report_names) {
-
         int global_rank, global_size;
         MPI_Comm_rank(MPI_COMM_WORLD, &global_rank);
         MPI_Comm_size(MPI_COMM_WORLD, &global_size);
@@ -131,140 +131,77 @@ struct ParallelImplementation {
         size_t comm_hash = hasher(comm_name);
         if (SonataReport::communicators_.find(comm_name) == SonataReport::communicators_.end()) {
             MPI_Comm_split(SonataReport::has_nodes_,
-                            comm_hash,
-                            0,
-                            &SonataReport::communicators_[comm_name]);
+                           comm_hash,
+                           0,
+                           &SonataReport::communicators_[comm_name]);
         }
     };
 
-    static std::vector<std::string> sync_populations(const std::vector<std::string>& local_populations) {
-        /*
-            #include <iostream>
-            #include <algorithm>
-            #include <numeric>
-            #include <array>
-            #include <map>
-            #include <set>
-            #include <vector>
-            #include <stdio.h>
-            #include <string.h>
-            #include <mpi.h>
+    static std::vector<std::string> sync_populations(
+        const std::string& comm_name, const std::vector<std::string>& local_populations) {
+        const auto& serialize = [](const std::vector<std::string>& strings) -> std::vector<char> {
+            std::vector<char> buffer;
+            for (const auto& str : strings) {
+                const auto offset = buffer.size();
+                buffer.resize(offset + str.size() + 1);  // +1 for null-char
 
-            using fstring = std::array<char, 256>;
-
-            int main(int argc, char **argv)
-            {
-                std::map<std::string, int> populations_;
-
-                int rank, nranks;
-                MPI_Comm comm = MPI_COMM_WORLD;
-
-                MPI_Init(&argc, &argv);
-                MPI_Comm_rank(comm, &rank);
-                MPI_Comm_size(comm, &nranks);
-
-                // Fill the populations
-                {
-                    if (rank == 0)
-                    {
-                        populations_["NodeA"] = 0;
-                        populations_["NodeB"] = 0;
-                        populations_["NodeC"] = 0;
-                    }
-                    else if (rank == 1)
-                    {
-                        populations_["NodeA"] = 0;
-                        populations_["NodeC"] = 0;
-                    }
-                    else if (rank == 2)
-                    {
-                        populations_["NodeE"] = 0;
-                    }
-                    else if (rank == 3)
-                    {
-                        populations_["NodeB"] = 0;
-                        populations_["NodeD"] = 0;
-                    }
-                }
-
-
-                int num_populations = populations_.size();
-
-                std::vector<fstring> buffer;
-                buffer.resize(num_populations);
-                size_t count = 0;
-                for (const auto &population : populations_) {
-                    strcpy((char *)&buffer[count++], population.first.c_str());
-                }
-
-
-                std::vector<int> counts((rank == 0) ? nranks : 0);
-                std::vector<int> displs((rank == 0) ? nranks : 0);
-
-                MPI_Gather(&num_populations, 1, MPI_INT, counts.data(), 1, MPI_INT, 0, comm);
-
-                if (rank == 0) {
-                    displs[0] = 0;
-                    for (size_t offset = 1; offset < nranks; offset++) {
-                        displs[offset] = displs[offset - 1] + counts[offset-1];
-                    }
-
-                    const auto population_count = std::accumulate(counts.begin(), counts.end(), 0);
-                    buffer.resize(population_count);
-                }
-
-                MPI_Datatype fstring_type;
-                MPI_Type_contiguous(sizeof(fstring), MPI_CHAR, &fstring_type);
-                MPI_Type_commit(&fstring_type);
-
-                MPI_Gatherv(buffer.data(), num_populations, fstring_type,
-                            buffer.data(), counts.data(), displs.data(), fstring_type,
-                            0, comm);
-                
-
-                if (rank == 0) {
-                    std::set<std::string> populations_set;
-
-                    for (const auto& population : buffer) {
-                        populations_set.insert(std::string(population.data()));
-                    }
-
-                    num_populations = populations_set.size();
-                    buffer.resize(num_populations);
-                    
-                    size_t count = 0;
-                    for (const auto& population : populations_set) {
-                        strcpy((char *)&buffer[count++], population.c_str());
-                    }
-                }
-
-                MPI_Bcast(&num_populations, 1, MPI_INT, 0, comm);
-                buffer.resize(num_populations);
-                MPI_Bcast(buffer.data(), num_populations, fstring_type, 0, comm);
-
-                for (const auto& population : buffer) {
-                    populations_.emplace(std::string(population.data()), 0);
-                }
-
-                for (int i = 0; i < nranks; i++) {
-                    if (rank == i)
-                    {
-                        std::cout << "Rank #" << i << std::endl;
-                        for (const auto& population : populations_) {
-                            std::cout << "  " << population.first << std::endl;
-                        }
-                    }
-
-                    MPI_Barrier(comm);
-                }
-
-                MPI_Finalize();
-
-                return 0;
+                strcpy(&buffer[offset], str.c_str());
             }
-        */
-        std::vector<std::string> global_populations = {"NodeA, NodeB"};
-        return global_populations;
+            return buffer;
+        };
+        const auto& deserialize = [](const std::vector<char>& strings) -> std::vector<std::string> {
+            std::vector<std::string> buffer;
+            for (size_t offset = 0; offset < strings.size();
+                 offset += (buffer.back().size() + 1)) {  // +1 for null-char
+                buffer.emplace_back(&strings[offset]);
+            }
+            return buffer;
+        };
+
+        MPI_Comm comm = get_Comm(comm_name);
+        auto buffer = serialize(local_populations);
+        auto buffer_size = static_cast<int>(buffer.size());
+
+        int nranks;
+        MPI_Comm_size(comm, &nranks);
+        std::vector<int> counts((SonataReport::rank_ == 0) ? nranks : 0);
+        std::vector<int> displs((SonataReport::rank_ == 0) ? nranks : 0);
+
+        MPI_Gather(&buffer_size, 1, MPI_INT, counts.data(), 1, MPI_INT, 0, comm);
+
+        if (SonataReport::rank_ == 0) {
+            std::partial_sum(counts.begin(), counts.end(), displs.begin());
+            displs.insert(displs.begin(), 0);  // To begin with offset=0
+
+            const auto buffer_sizes = std::accumulate(counts.begin(), counts.end(), 0);
+            buffer.resize(buffer_sizes);
+        }
+
+        MPI_Gatherv(buffer.data(),
+                    buffer_size,
+                    MPI_CHAR,
+                    buffer.data(),
+                    counts.data(),
+                    displs.data(),
+                    MPI_CHAR,
+                    0,
+                    comm);
+
+        if (SonataReport::rank_ == 0) {
+            const auto buffer_str = deserialize(buffer);
+            // Eliminate duplicated populations
+            std::set<std::string> buffer_set(buffer_str.begin(), buffer_str.end());
+
+            buffer = serialize(std::vector<std::string>(buffer_set.begin(), buffer_set.end()));
+            buffer_size = static_cast<int>(buffer.size());
+        }
+
+        MPI_Bcast(&buffer_size, 1, MPI_INT, 0, comm);
+        buffer.resize(buffer_size);
+        MPI_Bcast(buffer.data(), buffer_size, MPI_CHAR, 0, comm);
+
+        // Return the vector of population names
+        return deserialize(buffer);
     };
 
     static hid_t prepare_write(const std::string& report_name) {
@@ -407,8 +344,9 @@ struct SerialImplementation {
         return 0;
     };
     static void close(){};
-    static void add_communicator(const std::string& comm_name) {};
-    static std::vector<std::string> sync_populations(const std::vector<std::string>& local_populations) {
+    static void add_communicator(const std::string& comm_name){};
+    static std::vector<std::string> sync_populations(
+        const std::string& comm_name, const std::vector<std::string>& local_populations) {
         return local_populations;
     };
     static hid_t prepare_write(const std::string& report_name) {

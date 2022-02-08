@@ -65,27 +65,22 @@ int Report::prepare_dataset() {
     file_handler_ = Implementation::prepare_write(report_name_);
 
     std::vector<std::string> local_populations;
-    std::transform(begin(*populations_), end(*populations_), back_inserter(local_populations), [](auto const& pair) {
-        return pair.first;
-    });
+    std::transform(begin(*populations_),
+                   end(*populations_),
+                   back_inserter(local_populations),
+                   [](auto const& pair) { return pair.first; });
 
-    std::vector<std::string> global_populations = Implementation::sync_populations(local_populations);
-
-    for(const auto& population: global_populations) {
-        logger->debug("Rank {} - population {}", SonataReport::rank_, population);
-    }
-
-    if (SonataReport::rank_ == 0) {
-        std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>();
-        populations_->emplace("NodeB", nodes);
-    } else {
-        std::shared_ptr<nodes_t> nodes = std::make_shared<nodes_t>();
-        populations_->emplace("NodeA", nodes);
-    }
-
-    for (const auto& population : *populations_) {
-        const std::string& population_name = population.first;
-        std::shared_ptr<nodes_t> nodes = population.second;
+    std::vector<std::string> global_populations =
+        Implementation::sync_populations(report_name_, local_populations);
+    for (const auto& population_name : global_populations) {
+        std::shared_ptr<nodes_t> nodes;
+        if (population_exists(population_name)) {
+            nodes = populations_->at(population_name);
+        } else {
+            // Creating empty nodes for ranks without certain populations to participate in
+            // collectives
+            nodes = std::make_shared<nodes_t>();
+        }
         sonata_populations_.push_back(
             std::make_unique<SonataData>(report_name_,
                                          population_name,
