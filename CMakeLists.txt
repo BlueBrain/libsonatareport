@@ -74,14 +74,13 @@ endif()
 # Dependencies
 # =============================================================================
 
-find_package(HDF5)
 if(SONATA_REPORT_ENABLE_MPI)
     find_package(MPI REQUIRED)
     if (MPI_FOUND)
         # With MPI we prefer HDF5 parallel
         set(HDF5_PREFER_PARALLEL "ON")
     endif()
-
+    find_package(HDF5)
     if (MPI_FOUND)
         if (HDF5_FOUND)
             if (HDF5_IS_PARALLEL)
@@ -102,6 +101,7 @@ if(SONATA_REPORT_ENABLE_MPI)
         endif()
     endif()
 else()
+    find_package(HDF5)
     if (HDF5_IS_PARALLEL)
         message(FATAL_ERROR "HDF5 parallel IO found without MPI")
     else()

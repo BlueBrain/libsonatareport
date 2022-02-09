@@ -27,6 +27,7 @@ fi
 #TODO: adapt comparison to any population name (for now All)
 h5diff -c compartment_report.h5 $ref_compartment /report/All/data > diff_compartment.dat 2>&1
 h5diff -c soma_report.h5 $ref_soma /report/All/data > diff_soma.dat 2>&1
+h5diff -c buffered_soma_report.h5 $ref_soma /report/buffered/data /report/All/data > diff_soma_buffered.dat 2>&1
 h5diff -c out.h5 $ref_spikes /spikes/NodeA/timestamps > diff_spikes.dat 2>&1
 h5diff -c out.h5 $ref_spikes /spikes/NodeB/node_ids > diff_spikes.dat 2>&1
 
@@ -39,6 +40,11 @@ elif [ -s diff_soma.dat ]
 then
   echo "Soma results are different, check the file diff_soma.dat. Test failed!"
   cat diff_soma.dat
+  exit 1
+elif [ -s diff_soma_buffered.dat ]
+then
+  echo "Soma buffered results are different, check the file diff_soma_buffered.dat. Test failed!"
+  cat diff_soma_buffered.dat
   exit 1
 elif [ -s diff_spikes.dat ]
 then

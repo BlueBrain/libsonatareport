@@ -45,6 +45,8 @@ class Report
 
     virtual void record_data(double step, const std::vector<uint64_t>& node_ids);
     virtual void record_data(double step);
+    virtual void write_buffered_data(const std::vector<float>& buffered_data,
+                                     uint32_t steps_to_write);
     virtual void check_and_flush(double timestep);
     virtual void flush(double time);
     void refresh_pointers(std::function<double*(double*)> refresh_function);
