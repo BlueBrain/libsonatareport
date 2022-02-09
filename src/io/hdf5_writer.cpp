@@ -132,23 +132,23 @@ void HDF5Writer::write(const std::string& dataset_name, const std::vector<T>& bu
 
     hsize_t dims = buffer.size();
     hsize_t global_dims = Implementation::get_global_dims(report_name_, dims);
+    hsize_t offset = Implementation::get_offset(report_name_, dims);
+
+    hid_t data_space = H5Screate_simple(1, &global_dims, nullptr);
+    hid_t data_set = H5Dcreate(
+        file_, dataset_name.c_str(), type, data_space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
     if (global_dims > 0) {
-        hsize_t offset = Implementation::get_offset(report_name_, dims);
-        hid_t data_space = H5Screate_simple(1, &global_dims, nullptr);
-        hid_t data_set = H5Dcreate(
-            file_, dataset_name.c_str(), type, data_space, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
-
-        hid_t filespace = H5Dget_space(data_set);
         hid_t memspace = H5Screate_simple(1, &dims, nullptr);
-        H5Sselect_hyperslab(filespace, H5S_SELECT_SET, &offset, nullptr, &dims, nullptr);
+        hid_t filespace = H5Dget_space(data_set);
 
+        H5Sselect_hyperslab(filespace, H5S_SELECT_SET, &offset, nullptr, &dims, nullptr);
         H5Dwrite(data_set, type, memspace, filespace, collective_list_, buffer.data());
 
-        H5Sclose(memspace);
         H5Sclose(filespace);
-        H5Dclose(data_set);
-        H5Sclose(data_space);
+        H5Sclose(memspace);
     }
+    H5Dclose(data_set);
+    H5Sclose(data_space);
 }
 
 void HDF5Writer::write_time(const std::string& dataset_name, const std::array<double, 3>& buffer) {
