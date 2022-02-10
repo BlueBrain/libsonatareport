@@ -82,6 +82,7 @@ SCENARIO("Test SonataData class", "[SonataData][IOWriter]") {
                 sonata->convert_gids_to_sonata(sonata_node_ids, population_offset);
                 std::vector<uint64_t> compare = {0, 1, 41};
                 REQUIRE(sonata_node_ids == compare);
+                REQUIRE_THROWS(sonata->convert_gids_to_sonata(sonata_node_ids, population_offset));
             }
 
             THEN("We check the element ids of the sonata report") {
