@@ -154,8 +154,9 @@ void sonata_write_spikes(const char* population_name,
                          uint64_t num_timestamps,
                          const int* spike_node_ids,
                          uint64_t num_node_ids,
-                         const char* output_dir) {
-    sonata_create_spikefile(output_dir);
+                         const char* output_dir,
+                         const char* filename) {
+    sonata_create_spikefile(output_dir, filename);
     uint64_t population_offset = 0;
     sonata_add_spikes_population(population_name,
                                  population_offset,
@@ -167,8 +168,12 @@ void sonata_write_spikes(const char* population_name,
     sonata_close_spikefile();
 }
 
-void sonata_create_spikefile(const char* output_dir) {
-    sonata_report.create_spikefile(output_dir);
+void sonata_create_spikefile(const char* output_dir, const char* filename) {
+    if (filename == nullptr) {
+        sonata_report.create_spikefile(output_dir);
+    } else {
+        sonata_report.create_spikefile(output_dir, filename);
+    }
 }
 
 void sonata_add_spikes_population(const char* population_name,

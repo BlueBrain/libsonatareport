@@ -58,7 +58,7 @@ class SonataReport
     void create_communicators();
     void prepare_datasets();
 
-    void create_spikefile(const std::string& output_dir);
+    void create_spikefile(const std::string& output_dir, const std::string& filename = "out");
     void add_spikes_population(const std::string& population_name,
                                uint64_t population_offset,
                                const std::vector<double>& spike_timestamps,

@@ -86,8 +86,8 @@ void SonataReport::prepare_datasets() {
     }
 }
 
-void SonataReport::create_spikefile(const std::string& output_dir) {
-    std::string report_name = output_dir + "/out";
+void SonataReport::create_spikefile(const std::string& output_dir, const std::string& filename) {
+    std::string report_name = output_dir + "/" + filename;
     spike_data_ = std::make_unique<SonataData>(report_name);
 }
 
