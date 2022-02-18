@@ -20,7 +20,6 @@ namespace bbp {
 namespace sonata {
 namespace detail {
 
-#define FILE_EXTENSION ".h5"
 
 template <class TImpl>
 struct Implementation {
@@ -106,6 +105,15 @@ static MPI_Comm get_Comm(const std::string& comm_name) {
         return SonataReport::communicators_[comm_name];
     }
     return MPI_COMM_WORLD;
+}
+
+static std::string add_extension(const std::string& report_name) {
+    std::string new_name = report_name;
+    // Add h5 suffix if name doesn't have it
+    if(report_name.substr(report_name.find_last_of(".") + 1) != "h5") {
+        new_name += ".h5";
+    }
+    return new_name;
 }
 
 struct ParallelImplementation {
@@ -206,7 +214,7 @@ struct ParallelImplementation {
     };
 
     static hid_t prepare_write(const std::string& report_name) {
-        const auto& path_info = IMEUtil::get_path_info(report_name + FILE_EXTENSION);
+        const auto& path_info = IMEUtil::get_path_info(report_name);
         MPI_Info info = MPI_INFO_NULL;
 
         // Set proper MPI-IO hints for better IME support
@@ -218,7 +226,7 @@ struct ParallelImplementation {
         hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
         H5Pset_fapl_mpio(plist_id, get_Comm(report_name), info);
 
-        std::string file_name = path_info.second;
+        std::string file_name = add_extension(path_info.second);
         if (SonataReport::rank_ == 0) {
             logger->debug("Creating file '{}'", file_name);
         }
@@ -352,7 +360,7 @@ struct SerialImplementation {
     };
     static hid_t prepare_write(const std::string& report_name) {
         hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
-        std::string file_name = report_name + FILE_EXTENSION;
+        std::string file_name = add_extension(report_name);
         hid_t file_handler = H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
         return file_handler;
     }
