@@ -97,6 +97,15 @@ static void local_spikevec_sort(std::vector<double>& isvect,
     std::transform(perm.begin(), perm.end(), osvecg.begin(), [&](uint64_t i) { return isvecg[i]; });
 }
 
+static std::string add_extension(const std::string& report_name) {
+    std::string new_name = report_name;
+    // Add h5 suffix if name doesn't have it
+    if(report_name.substr(report_name.find_last_of(".") + 1) != "h5") {
+        new_name += ".h5";
+    }
+    return new_name;
+}
+
 #ifdef SONATA_REPORT_HAVE_MPI
 
 static MPI_Comm get_Comm(const std::string& comm_name) {
@@ -105,15 +114,6 @@ static MPI_Comm get_Comm(const std::string& comm_name) {
         return SonataReport::communicators_[comm_name];
     }
     return MPI_COMM_WORLD;
-}
-
-static std::string add_extension(const std::string& report_name) {
-    std::string new_name = report_name;
-    // Add h5 suffix if name doesn't have it
-    if(report_name.substr(report_name.find_last_of(".") + 1) != "h5") {
-        new_name += ".h5";
-    }
-    return new_name;
 }
 
 struct ParallelImplementation {
