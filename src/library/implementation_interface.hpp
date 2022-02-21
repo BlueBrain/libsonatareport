@@ -100,7 +100,7 @@ static void local_spikevec_sort(std::vector<double>& isvect,
 static std::string add_extension(const std::string& report_name) {
     std::string new_name = report_name;
     // Add h5 suffix if name doesn't have it
-    if(report_name.substr(report_name.find_last_of(".") + 1) != "h5") {
+    if (report_name.substr(report_name.find_last_of(".") + 1) != "h5") {
         new_name += ".h5";
     }
     return new_name;
