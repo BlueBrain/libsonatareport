@@ -165,19 +165,18 @@ struct ParallelImplementation {
             }
             return buffer;
         };
-
         MPI_Comm comm = get_Comm(comm_name);
         auto buffer = serialize(local_populations);
         auto buffer_size = static_cast<int>(buffer.size());
 
-        int nranks;
+        int nranks, local_rank;
+        MPI_Comm_rank(comm, &local_rank);
         MPI_Comm_size(comm, &nranks);
-        std::vector<int> counts((SonataReport::rank_ == 0) ? nranks : 0);
-        std::vector<int> displs((SonataReport::rank_ == 0) ? nranks : 0);
+        std::vector<int> counts((local_rank == 0) ? nranks : 0);
+        std::vector<int> displs((local_rank == 0) ? nranks : 0);
 
         MPI_Gather(&buffer_size, 1, MPI_INT, counts.data(), 1, MPI_INT, 0, comm);
-
-        if (SonataReport::rank_ == 0) {
+        if (local_rank == 0) {
             std::partial_sum(counts.begin(), counts.end(), displs.begin());
             displs.insert(displs.begin(), 0);  // To begin with offset=0
 
@@ -185,7 +184,7 @@ struct ParallelImplementation {
             buffer.resize(buffer_sizes);
         }
 
-        auto send_buffer_ptr = (SonataReport::rank_ == 0) ? MPI_IN_PLACE : buffer.data();
+        auto send_buffer_ptr = (local_rank == 0) ? MPI_IN_PLACE : buffer.data();
         MPI_Gatherv(send_buffer_ptr,
                     buffer_size,
                     MPI_CHAR,
@@ -195,8 +194,7 @@ struct ParallelImplementation {
                     MPI_CHAR,
                     0,
                     comm);
-
-        if (SonataReport::rank_ == 0) {
+        if (local_rank == 0) {
             const auto buffer_str = deserialize(buffer);
             // Eliminate duplicated populations
             std::set<std::string> buffer_set(buffer_str.begin(), buffer_str.end());
