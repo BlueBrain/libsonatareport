@@ -16,6 +16,8 @@ struct Neuron {
     uint64_t node_id;
     std::string kind;  // soma / element
     std::vector<double> voltages;
+    std::string population_name;
+    uint32_t population_offset;
 };
 
 void generate_spikes(const std::vector<uint64_t>& nodeids,
@@ -69,7 +71,13 @@ std::vector<uint64_t> generate_data(std::vector<Neuron>& neurons,
 
         nodeids.push_back(next_nodeid);
         tmp_neuron.node_id = next_nodeid++;
-
+        if (next_nodeid % 2 == 0) {
+            tmp_neuron.population_name = "NodeA";
+            tmp_neuron.population_offset = 1000;
+        } else {
+            tmp_neuron.population_name = "NodeB";
+            tmp_neuron.population_offset = 0;
+        }
         // element or soma
         generate_elements(tmp_neuron, seed);
         neurons.push_back(tmp_neuron);
@@ -78,8 +86,6 @@ std::vector<uint64_t> generate_data(std::vector<Neuron>& neurons,
 }
 
 void init(const char* report_name,
-          const char* population_name,
-          uint64_t population_offset,
           double tstart,
           double tstop,
           double dt,
@@ -89,11 +95,13 @@ void init(const char* report_name,
     // logic for registering soma and element reports with reportinglib
     sonata_create_report(report_name, tstart, tstop, dt, units.c_str(), kind.c_str());
     for (auto& neuron : neurons) {
-        sonata_add_node(report_name, population_name, population_offset, neuron.node_id);
+        std::string pop_name = neuron.population_name;
+        uint32_t pop_offset = neuron.population_offset;
+        sonata_add_node(report_name, pop_name.data(), pop_offset, neuron.node_id);
         int element_id = neuron.node_id * 1000;
 
         for (auto& element : neuron.voltages) {
-            sonata_add_element(report_name, population_name, neuron.node_id, element_id, &element);
+            sonata_add_element(report_name, pop_name.data(), neuron.node_id, element_id, &element);
             ++element_id;
         }
     }
@@ -119,7 +127,7 @@ void print_data(std::vector<Neuron>& neurons) {
 }
 
 int main() {
-    logger->set_level(spdlog::level::trace);
+    logger->set_level(spdlog::level::debug);
     int global_rank = 0;
     int global_size = 1;
 #ifdef SONATA_REPORT_HAVE_MPI
@@ -156,28 +164,10 @@ int main() {
     }
     const char* element_report = "compartment_report";
     const char* soma_report = "soma_report";
-    const char* population_name = "All";
     const char* units = "mV";
-    uint64_t population_offset = 0;
 
-    init(element_report,
-         population_name,
-         population_offset,
-         tstart,
-         tstop,
-         dt,
-         element_neurons,
-         "compartment",
-         units);
-    init(soma_report,
-         population_name,
-         population_offset,
-         tstart,
-         tstop,
-         dt,
-         soma_neurons,
-         "soma",
-         units);
+    init(element_report, tstart, tstop, dt, element_neurons, "compartment", units);
+    init(soma_report, tstart, tstop, dt, soma_neurons, "soma", units);
     sonata_set_max_buffer_size_hint(20);
     sonata_set_atomic_step(dt);
 

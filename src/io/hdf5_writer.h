@@ -12,6 +12,7 @@ namespace sonata {
 class HDF5Writer
 {
   public:
+    explicit HDF5Writer(const std::string& report_name, hid_t file_handler);
     explicit HDF5Writer(const std::string& report_name);
     void configure_group(const std::string& group_name);
     void configure_attribute(const std::string& dataset_name,

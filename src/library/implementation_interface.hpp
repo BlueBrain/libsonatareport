@@ -20,7 +20,6 @@ namespace bbp {
 namespace sonata {
 namespace detail {
 
-#define FILE_EXTENSION ".h5"
 
 template <class TImpl>
 struct Implementation {
@@ -30,9 +29,18 @@ struct Implementation {
     static void close() {
         TImpl::close();
     }
-    static std::tuple<hid_t, hid_t, hid_t, std::string> prepare_write(
-        const std::string& report_name) {
+    static void add_communicator(const std::string& comm_name) {
+        return TImpl::add_communicator(comm_name);
+    }
+    static std::vector<std::string> sync_populations(
+        const std::string& comm_name, const std::vector<std::string>& local_populations) {
+        return TImpl::sync_populations(comm_name, local_populations);
+    }
+    static hid_t prepare_write(const std::string& report_name) {
         return TImpl::prepare_write(report_name);
+    }
+    static hid_t initialize_colective() {
+        return TImpl::initialize_colective();
     }
     static hsize_t get_offset(const std::string& report_name, hsize_t value) {
         return TImpl::get_offset(report_name, value);
@@ -89,25 +97,28 @@ static void local_spikevec_sort(std::vector<double>& isvect,
     std::transform(perm.begin(), perm.end(), osvecg.begin(), [&](uint64_t i) { return isvecg[i]; });
 }
 
+static std::string add_extension(const std::string& report_name) {
+    std::string new_name = report_name;
+    // Add h5 suffix if name doesn't have it
+    if (report_name.substr(report_name.find_last_of(".") + 1) != "h5") {
+        new_name += ".h5";
+    }
+    return new_name;
+}
+
 #ifdef SONATA_REPORT_HAVE_MPI
 
-static MPI_Comm get_Comm(const std::string& report_name) {
-    if (SonataReport::communicators_.find(report_name) != SonataReport::communicators_.end()) {
+static MPI_Comm get_Comm(const std::string& comm_name) {
+    if (SonataReport::communicators_.find(comm_name) != SonataReport::communicators_.end()) {
         // Found
-        return SonataReport::communicators_[report_name];
+        return SonataReport::communicators_[comm_name];
     }
     return MPI_COMM_WORLD;
 }
 
 struct ParallelImplementation {
     static int init(const std::vector<std::string>& report_names) {
-        // size_t MPI type
-        MPI_Datatype mpi_size_type = MPI_UINT64_T;
-        if (sizeof(size_t) == 4) {
-            mpi_size_type = MPI_UINT32_T;
-        }
-
-        int global_rank, global_size, local_size;
+        int global_rank, global_size;
         MPI_Comm_rank(MPI_COMM_WORLD, &global_rank);
         MPI_Comm_size(MPI_COMM_WORLD, &global_size);
 
@@ -117,58 +128,91 @@ struct ParallelImplementation {
         // Create a first communicator with the ranks with at least 1 report
         int num_reports = report_names.size();
         MPI_Comm_split(MPI_COMM_WORLD, num_reports == 0, 0, &SonataReport::has_nodes_);
-        MPI_Comm_size(SonataReport::has_nodes_, &local_size);
-
-        // Send report numbers and generate offset array for allgatherv
-        std::vector<int> report_sizes(local_size);
-        MPI_Allgather(
-            &num_reports, 1, MPI_INT, report_sizes.data(), 1, MPI_INT, SonataReport::has_nodes_);
-        std::vector<int> offsets(local_size + 1);
-        offsets[0] = 0;
-        std::partial_sum(report_sizes.begin(), report_sizes.end(), offsets.begin() + 1);
-
-        // Create auxiliar map to associate hash with report name
-        std::map<size_t, std::string> hash_report_names;
-        std::hash<std::string> hasher;
-        std::vector<size_t> local_report_hashes;
-        local_report_hashes.reserve(num_reports);
-        for (const auto& elem : report_names) {
-            size_t report_hash = hasher(elem);
-            local_report_hashes.push_back(report_hash);
-            hash_report_names[report_hash] = elem;
-        }
-
-        // Get global number of reports
-        size_t total_num_reports = std::accumulate(report_sizes.begin(), report_sizes.end(), 0);
-        std::vector<size_t> global_report_hashes(total_num_reports);
-        MPI_Allgatherv(local_report_hashes.data(),
-                       num_reports,
-                       mpi_size_type,
-                       global_report_hashes.data(),
-                       report_sizes.data(),
-                       offsets.data(),
-                       mpi_size_type,
-                       SonataReport::has_nodes_);
-
-        // Eliminate duplicates
-        std::set<size_t> result(global_report_hashes.begin(), global_report_hashes.end());
-        // Create communicators per report name
-        for (auto& elem : result) {
-            MPI_Comm_split(SonataReport::has_nodes_,
-                           std::find(local_report_hashes.begin(),
-                                     local_report_hashes.end(),
-                                     elem) != local_report_hashes.end(),
-                           0,
-                           &SonataReport::communicators_[hash_report_names[elem]]);
-        }
 
         return global_rank;
     };
 
     static void close(){};
-    static std::tuple<hid_t, hid_t, hid_t, std::string> prepare_write(
-        const std::string& report_name) {
-        const auto& path_info = IMEUtil::get_path_info(report_name + FILE_EXTENSION);
+
+    static void add_communicator(const std::string& comm_name) {
+        std::hash<std::string> hasher;
+        size_t comm_hash = hasher(comm_name);
+        if (SonataReport::communicators_.find(comm_name) == SonataReport::communicators_.end()) {
+            MPI_Comm_split(SonataReport::has_nodes_,
+                           comm_hash,
+                           0,
+                           &SonataReport::communicators_[comm_name]);
+        }
+    };
+
+    static std::vector<std::string> sync_populations(
+        const std::string& comm_name, const std::vector<std::string>& local_populations) {
+        const auto& serialize = [](const std::vector<std::string>& strings) -> std::vector<char> {
+            std::vector<char> buffer;
+            for (const auto& str : strings) {
+                const auto offset = buffer.size();
+                buffer.resize(offset + str.size() + 1);  // +1 for null-char
+
+                strcpy(&buffer[offset], str.c_str());
+            }
+            return buffer;
+        };
+        const auto& deserialize = [](const std::vector<char>& strings) -> std::vector<std::string> {
+            std::vector<std::string> buffer;
+            for (size_t offset = 0; offset < strings.size();
+                 offset += (buffer.back().size() + 1)) {  // +1 for null-char
+                buffer.emplace_back(&strings[offset]);
+            }
+            return buffer;
+        };
+        MPI_Comm comm = get_Comm(comm_name);
+        auto buffer = serialize(local_populations);
+        auto buffer_size = static_cast<int>(buffer.size());
+
+        int nranks, local_rank;
+        MPI_Comm_rank(comm, &local_rank);
+        MPI_Comm_size(comm, &nranks);
+        std::vector<int> counts((local_rank == 0) ? nranks : 0);
+        std::vector<int> displs((local_rank == 0) ? nranks : 0);
+
+        MPI_Gather(&buffer_size, 1, MPI_INT, counts.data(), 1, MPI_INT, 0, comm);
+        if (local_rank == 0) {
+            std::partial_sum(counts.begin(), counts.end(), displs.begin());
+            displs.insert(displs.begin(), 0);  // To begin with offset=0
+
+            const auto buffer_sizes = std::accumulate(counts.begin(), counts.end(), 0);
+            buffer.resize(buffer_sizes);
+        }
+
+        auto send_buffer_ptr = (local_rank == 0) ? MPI_IN_PLACE : buffer.data();
+        MPI_Gatherv(send_buffer_ptr,
+                    buffer_size,
+                    MPI_CHAR,
+                    buffer.data(),
+                    counts.data(),
+                    displs.data(),
+                    MPI_CHAR,
+                    0,
+                    comm);
+        if (local_rank == 0) {
+            const auto buffer_str = deserialize(buffer);
+            // Eliminate duplicated populations
+            std::set<std::string> buffer_set(buffer_str.begin(), buffer_str.end());
+
+            buffer = serialize(std::vector<std::string>(buffer_set.begin(), buffer_set.end()));
+            buffer_size = static_cast<int>(buffer.size());
+        }
+
+        MPI_Bcast(&buffer_size, 1, MPI_INT, 0, comm);
+        buffer.resize(buffer_size);
+        MPI_Bcast(buffer.data(), buffer_size, MPI_CHAR, 0, comm);
+
+        // Return the vector of population names
+        return deserialize(buffer);
+    };
+
+    static hid_t prepare_write(const std::string& report_name) {
+        const auto& path_info = IMEUtil::get_path_info(report_name);
         MPI_Info info = MPI_INFO_NULL;
 
         // Set proper MPI-IO hints for better IME support
@@ -180,37 +224,45 @@ struct ParallelImplementation {
         hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
         H5Pset_fapl_mpio(plist_id, get_Comm(report_name), info);
 
-        // Initialize independent/collective lists
-        hid_t collective_list = H5Pcreate(H5P_DATASET_XFER);
-        hid_t independent_list = H5Pcreate(H5P_DATASET_XFER);
-        H5Pset_dxpl_mpio(collective_list, H5FD_MPIO_COLLECTIVE);
-        H5Pset_dxpl_mpio(independent_list, H5FD_MPIO_INDEPENDENT);
+        std::string file_name = add_extension(path_info.second);
+        if (SonataReport::rank_ == 0) {
+            logger->debug("Creating file '{}'", file_name);
+        }
+        hid_t file_handler = H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+        H5Pclose(plist_id);
 
-        return std::make_tuple(plist_id, collective_list, independent_list, path_info.second);
+        return file_handler;
     };
 
-    static hsize_t get_offset(const std::string& report_name, hsize_t value) {
+    static hid_t initialize_colective() {
+        // Initialize independent/collective lists
+        hid_t collective_list = H5Pcreate(H5P_DATASET_XFER);
+        H5Pset_dxpl_mpio(collective_list, H5FD_MPIO_COLLECTIVE);
+        return collective_list;
+    }
+
+    static hsize_t get_offset(const std::string& comm_name, hsize_t value) {
         hsize_t offset = 0;
-        MPI_Scan(&value, &offset, 1, MPI_UNSIGNED_LONG, MPI_SUM, get_Comm(report_name));
+        MPI_Scan(&value, &offset, 1, MPI_UNSIGNED_LONG, MPI_SUM, get_Comm(comm_name));
         offset -= value;
         return offset;
     };
 
-    static int get_last_rank(const std::string& report_name, int value) {
+    static int get_last_rank(const std::string& comm_name, int value) {
         int last_rank = 0;
-        MPI_Allreduce(&value, &last_rank, 1, MPI_INT, MPI_MAX, get_Comm(report_name));
+        MPI_Allreduce(&value, &last_rank, 1, MPI_INT, MPI_MAX, get_Comm(comm_name));
         return last_rank;
     }
 
-    static hsize_t get_global_dims(const std::string& report_name, hsize_t value) {
+    static hsize_t get_global_dims(const std::string& comm_name, hsize_t value) {
         hsize_t global_dims = value;
-        MPI_Allreduce(&value, &global_dims, 1, MPI_UNSIGNED_LONG, MPI_SUM, get_Comm(report_name));
+        MPI_Allreduce(&value, &global_dims, 1, MPI_UNSIGNED_LONG, MPI_SUM, get_Comm(comm_name));
         return global_dims;
     };
 
-    static uint32_t get_max_steps_to_write(const std::string& report_name, uint32_t value) {
+    static uint32_t get_max_steps_to_write(const std::string& comm_name, uint32_t value) {
         uint32_t max_steps_to_write = value;
-        MPI_Allreduce(&value, &max_steps_to_write, 1, MPI_UNSIGNED, MPI_MIN, get_Comm(report_name));
+        MPI_Allreduce(&value, &max_steps_to_write, 1, MPI_UNSIGNED, MPI_MIN, get_Comm(comm_name));
         return max_steps_to_write;
     };
 
@@ -299,12 +351,19 @@ struct SerialImplementation {
         return 0;
     };
     static void close(){};
-    static std::tuple<hid_t, hid_t, hid_t, std::string> prepare_write(
-        const std::string& report_name) {
-        return std::make_tuple(H5Pcreate(H5P_FILE_ACCESS),
-                               H5Pcreate(H5P_DATASET_XFER),
-                               H5Pcreate(H5P_DATASET_XFER),
-                               report_name + FILE_EXTENSION);
+    static void add_communicator(const std::string& /*comm_nam*/){};
+    static std::vector<std::string> sync_populations(
+        const std::string& /*comm_name*/, const std::vector<std::string>& local_populations) {
+        return local_populations;
+    };
+    static hid_t prepare_write(const std::string& report_name) {
+        hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);
+        std::string file_name = add_extension(report_name);
+        hid_t file_handler = H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, plist_id);
+        return file_handler;
+    }
+    static hid_t initialize_colective() {
+        return H5Pcreate(H5P_DATASET_XFER);
     }
     static hsize_t get_offset(const std::string& /*report_name*/, hsize_t /*value*/) {
         return 0;

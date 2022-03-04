@@ -3,6 +3,7 @@
 #include <limits>
 
 #include "../utils/logger.h"
+#include "implementation_interface.hpp"
 #include "report.h"
 #include "sonatareport.h"
 
@@ -60,19 +61,38 @@ std::shared_ptr<Node> Report::get_node(const std::string& population_name, uint6
 }
 
 int Report::prepare_dataset() {
-    for (const auto& population : *populations_) {
-        std::shared_ptr<nodes_t> nodes = population.second;
+    Implementation::add_communicator(report_name_);
+    file_handler_ = Implementation::prepare_write(report_name_);
+
+    std::vector<std::string> local_populations;
+    std::transform(begin(*populations_),
+                   end(*populations_),
+                   back_inserter(local_populations),
+                   [](auto const& pair) { return pair.first; });
+
+    std::vector<std::string> global_populations =
+        Implementation::sync_populations(report_name_, local_populations);
+    for (const auto& population_name : global_populations) {
+        std::shared_ptr<nodes_t> nodes;
+        if (population_exists(population_name)) {
+            nodes = populations_->at(population_name);
+        } else {
+            // Creating empty nodes for ranks without certain populations to participate in
+            // collectives
+            nodes = std::make_shared<nodes_t>();
+        }
         sonata_populations_.push_back(
             std::make_unique<SonataData>(report_name_,
-                                         population.first,
-                                         population_offsets_[population.first],
+                                         population_name,
+                                         population_offsets_[population_name],
                                          max_buffer_size_,
                                          num_steps_,
                                          dt_,
                                          tstart_,
                                          tend_,
                                          units_,
-                                         nodes));
+                                         nodes,
+                                         file_handler_));
         sonata_populations_.back()->prepare_dataset();
     }
     return 0;
@@ -117,11 +137,15 @@ void Report::flush(double time) {
         // Write if there are any remaining steps to write
         sonata_data->write_data();
         if (time - tend_ + dt_ / 2 > 1e-6) {
-            if (!report_is_closed_) {
-                sonata_data->close();
-                report_is_closed_ = true;
-            }
+            sonata_data->close();
         }
+    }
+    if (!report_is_closed_) {
+        if (SonataReport::rank_ == 0) {
+            logger->debug("CLOSING report's file {}", report_name_);
+        }
+        H5Fclose(file_handler_);
+        report_is_closed_ = true;
     }
 }
 

@@ -65,6 +65,7 @@ class Report
     int num_steps_;
     size_t max_buffer_size_;
     bool report_is_closed_;
+    hid_t file_handler_ = 0;
 };
 
 }  // namespace sonata
