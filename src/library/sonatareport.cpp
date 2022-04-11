@@ -88,6 +88,7 @@ void SonataReport::prepare_datasets() {
 
 void SonataReport::create_spikefile(const std::string& output_dir, const std::string& filename) {
     std::string report_name = output_dir + "/" + filename;
+    Implementation::add_communicator(report_name);
     spike_data_ = std::make_unique<SonataData>(report_name);
 }
 
