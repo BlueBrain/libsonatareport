@@ -109,6 +109,8 @@ static std::string add_extension(const std::string& report_name) {
     return new_name;
 }
 
+#ifdef SONATA_REPORT_HAVE_MPI
+
 static std::vector<char> serialize(const std::vector<std::string>& strings) {
     std::vector<char> buffer;
     for (const auto& str : strings) {
@@ -127,8 +129,6 @@ static std::vector<std::string> deserialize(const std::vector<char>& strings) {
     }
     return buffer;
 }
-
-#ifdef SONATA_REPORT_HAVE_MPI
 
 static std::vector<std::string> sync_strings(const MPI_Comm comm,
                                              const std::vector<std::string>& strings) {
