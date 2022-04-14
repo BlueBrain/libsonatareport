@@ -56,14 +56,20 @@ void generate_elements(Neuron& neuron, int seed) {
 
 std::vector<uint64_t> generate_data(std::vector<Neuron>& neurons,
                                     const std::string& kind,
-                                    int seed) {
+                                    int seed,
+                                    int num_gids = -1) {
     std::vector<uint64_t> nodeids;
     // Each nodeid starts with the 1000 + rank*10 (i.e. rank 5 will have nodeids: 1051, 1052,
     // 1053...)
     uint64_t next_nodeid = 1000 + 1 + seed * 10;
 
     // 5+-5 neurons
-    uint32_t num_neurons = 5 + ((2 + (seed % 10)) - 5);
+    uint32_t num_neurons = 0;
+    if (num_gids == -1) {
+        num_neurons = 5 + ((2 + (seed % 10)) - 5);
+    } else {
+        num_neurons = num_gids;
+    }
     nodeids.reserve(num_neurons);
     for (uint32_t i = 0; i < num_neurons; i++) {
         Neuron tmp_neuron;
@@ -145,29 +151,37 @@ int main() {
 
     std::vector<Neuron> element_neurons;
     std::vector<Neuron> soma_neurons;
+    std::vector<Neuron> single_neurons;
     std::vector<uint64_t> element_nodeids;
     std::vector<uint64_t> soma_nodeids;
+    std::vector<uint64_t> single_nodeids;
     std::vector<double> spike_timestamps;
     std::vector<int> spike_node_ids;
 
     // Each rank will get different number of nodes (some even 0, so will be idle ranks)
     element_nodeids = generate_data(element_neurons, "compartment", global_rank);
     soma_nodeids = generate_data(soma_neurons, "soma", global_rank);
+    single_nodeids = generate_data(single_neurons, "soma", global_rank, 1);
     generate_spikes(
         soma_nodeids, spike_timestamps, spike_node_ids, tstart, tstop, global_rank, global_size);
 
     std::vector<int> int_element_nodeids(begin(element_nodeids), end(element_nodeids));
     std::vector<int> int_soma_nodeids(begin(soma_nodeids), end(soma_nodeids));
+    std::vector<int> int_single_nodeids(begin(single_nodeids), end(single_nodeids));
 
     if (global_rank == 0) {
         logger->info("Initializing data structures (reports, nodes, elements)");
     }
     const char* element_report = "compartment_report";
     const char* soma_report = "soma_report";
+    const char* single_report = "single_report";
     const char* units = "mV";
 
     init(element_report, tstart, tstop, dt, element_neurons, "compartment", units);
     init(soma_report, tstart, tstop, dt, soma_neurons, "soma", units);
+    if (global_rank == 0) {
+        init(single_report, tstart, tstop, dt, single_neurons, "soma", units);
+    }
     sonata_set_max_buffer_size_hint(20);
     sonata_set_atomic_step(dt);
 
@@ -188,6 +202,7 @@ int main() {
         }
         sonata_record_node_data(i, element_nodeids.size(), &int_element_nodeids[0], element_report);
         sonata_record_node_data(i, soma_nodeids.size(), &int_soma_nodeids[0], soma_report);
+        sonata_record_node_data(i, single_nodeids.size(), &int_single_nodeids[0], single_report);
         // Also works
         // sonata_rec(i);
         std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -198,6 +213,7 @@ int main() {
         // Change data every timestep
         change_data(element_neurons);
         change_data(soma_neurons);
+        change_data(single_neurons);
     }
     sonata_flush(t);
     const std::string output_dir = ".";

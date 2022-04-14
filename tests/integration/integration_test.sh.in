@@ -7,12 +7,14 @@ if [ -z "@SONATA_REPORT_HAVE_MPI@" ]; then
   @CMAKE_CURRENT_BINARY_DIR@/reports_integration_test
   ref_soma=@CMAKE_CURRENT_SOURCE_DIR@/soma_report_serial.ref
   ref_compartment=@CMAKE_CURRENT_SOURCE_DIR@/compartment_report_serial.ref
+  ref_single=@CMAKE_CURRENT_SOURCE_DIR@/single_report.ref
   ref_spikes=@CMAKE_CURRENT_SOURCE_DIR@/spikes_serial.ref
 else
   # Run the executable
   mpirun -n 4 @CMAKE_CURRENT_BINARY_DIR@/reports_integration_test
   ref_soma=@CMAKE_CURRENT_SOURCE_DIR@/soma_report.ref
   ref_compartment=@CMAKE_CURRENT_SOURCE_DIR@/compartment_report.ref
+  ref_single=@CMAKE_CURRENT_SOURCE_DIR@/single_report.ref
   ref_spikes=@CMAKE_CURRENT_SOURCE_DIR@/spikes.ref
 fi
 
@@ -26,6 +28,7 @@ fi
 
 h5diff -c compartment_report.h5 $ref_compartment /report/NodeA/data > diff_compartment.dat 2>&1
 h5diff -c soma_report.h5 $ref_soma /report/NodeB/data > diff_soma.dat 2>&1
+h5diff -c single_report.h5 $ref_single /report/NodeA/data > diff_single.dat 2>&1
 h5diff -c out_test.h5 $ref_spikes /spikes/NodeA/timestamps > diff_spikes.dat 2>&1
 h5diff -c out_test.h5 $ref_spikes /spikes/NodeB/node_ids > diff_spikes.dat 2>&1
 
@@ -38,6 +41,11 @@ elif [ -s diff_soma.dat ]
 then
   echo "Soma results are different, check the file diff_soma.dat. Test failed!"
   cat diff_soma.dat
+  exit 1
+elif [ -s diff_single.dat ]
+then
+  echo "Single gid results are different, check the file diff_single.dat. Test failed!"
+  cat diff_single.dat
   exit 1
 elif [ -s diff_spikes.dat ]
 then
