@@ -61,7 +61,6 @@ std::shared_ptr<Node> Report::get_node(const std::string& population_name, uint6
 }
 
 int Report::prepare_dataset() {
-    Implementation::add_communicator(report_name_);
     file_handler_ = Implementation::prepare_write(report_name_);
 
     std::vector<std::string> local_populations;
