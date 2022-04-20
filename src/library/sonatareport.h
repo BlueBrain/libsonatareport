@@ -18,7 +18,7 @@ namespace sonata {
  */
 class SonataReport
 {
-    using reports_t = std::unordered_map<std::string, std::shared_ptr<Report>>;
+    using reports_t = std::map<std::string, std::shared_ptr<Report>>;
 #ifdef SONATA_REPORT_HAVE_MPI
     using communicators_t = std::unordered_map<std::string, MPI_Comm>;
 #endif
