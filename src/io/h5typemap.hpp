@@ -1,7 +1,7 @@
 #pragma once
 
 /****************************************************************************
- * Copyright (C) 2016, EPFL-BBP                                             *
+ * Copyright (c) 2016-2022 Blue Brain Project/EPFL
  * All rights reserved                                                      *
  *                                                                          *
  * For the licensing terms see LICENSE file inside the root directory.      *
