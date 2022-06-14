@@ -147,7 +147,9 @@ static std::vector<std::string> sync_strings(const MPI_Comm comm,
         displs.insert(displs.begin(), 0);  // To begin with offset=0
 
         const auto buffer_sizes = std::accumulate(counts.begin(), counts.end(), 0);
-        buffer.resize(buffer_sizes);
+        // buffer_sizes might be zero, in which case buffer.data() would not be
+        // valid and some MPI implementations would complain in MPI_Gatherv.
+        buffer.resize(buffer_sizes + 1);
     }
 
     auto send_buffer_ptr = (local_rank == 0) ? MPI_IN_PLACE : buffer.data();
@@ -161,6 +163,8 @@ static std::vector<std::string> sync_strings(const MPI_Comm comm,
                 0,
                 comm);
     if (local_rank == 0) {
+        // undo the +1 before MPI_Gatherv
+        buffer.resize(buffer.size() - 1);
         const auto buffer_str = deserialize(buffer);
         // Eliminate duplicated populations
         std::set<std::string> buffer_set(buffer_str.begin(), buffer_str.end());
