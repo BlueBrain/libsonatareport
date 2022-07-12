@@ -163,7 +163,7 @@ void SonataData::record_data(double step) {
     last_step_recorded_ += reporting_period_;
 
     if (current_step_ == steps_to_write_) {
-        write_data();
+        flush();
     }
 }
 
@@ -199,7 +199,7 @@ void SonataData::check_and_write(double timestep) {
                 remaining_steps_,
                 steps_recorded_);
         }
-        write_data();
+        flush();
     }
     steps_recorded_ = 0;
 }
@@ -313,26 +313,30 @@ void SonataData::write_spike_populations() {
     }
 }
 
-void SonataData::write_data() {
+void SonataData::write_data(const std::vector<float>& buffered_data, uint32_t steps_to_write) {
     if (remaining_steps_ <= 0) {  // Nothing left to write
         return;
     }
-    if (current_step_ >= remaining_steps_) {  // Avoid writing out of bounds
-        current_step_ = remaining_steps_;
+    if (steps_to_write  >= remaining_steps_) {  // Avoid writing out of bounds
+        steps_to_write  = remaining_steps_;
     }
     if (SonataReport::rank_ == 0) {
         logger->debug("WRITING timestep data to file {} in population {}",
                       report_name_,
                       population_name_);
     }
-    hdf5_writer_->write_2D(report_buffer_, current_step_, total_elements_);
-    remaining_steps_ -= current_step_;
+    hdf5_writer_->write_2D(buffered_data, steps_to_write , total_elements_);
+    remaining_steps_ -= steps_to_write ;
     if (SonataReport::rank_ == 0) {
-        logger->debug("\t-Steps written: {}", current_step_);
+        logger->debug("\t-Steps written: {}", steps_to_write );
         logger->debug("\t-Remaining steps: {}", remaining_steps_);
     }
     last_position_ = 0;
-    current_step_ = 0;
+    steps_to_write  = 0;
+}
+
+void SonataData::flush() {
+    write_data(report_buffer_, current_step_);
 }
 
 void SonataData::close() {
