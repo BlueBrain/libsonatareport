@@ -164,5 +164,5 @@ endif()
 # Converter of binary to SONATA reports
 # =============================================================================
 if(SONATA_REPORT_ENABLE_CONVERTER)
-    add_subdirectory(converter)
+    add_subdirectory(tools/converter)
 endif()

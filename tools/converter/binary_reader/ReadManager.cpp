@@ -767,6 +767,11 @@ namespace bbpReader {
                      // read.
     }
 
+    void FrameParser::readMultipleFrameData(DataItem* buffer, int num_frames) {
+        readFrame(buffer);
+        timestep += num_frames;
+    }
+
     size_t FrameParser::ReadOptimiser::defaultElementSize = 1;
 
     FrameParser::ReadOptimiser::ReadOptimiser() {

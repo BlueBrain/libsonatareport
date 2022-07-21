@@ -34,3 +34,6 @@ target_link_libraries(reports_converter
     PRIVATE spdlog::spdlog_header_only
     PRIVATE ${MPI_CXX_LIBRARIES}
 )
+
+install(TARGETS spikes_converter DESTINATION bin)
+install(TARGETS reports_converter DESTINATION bin)
