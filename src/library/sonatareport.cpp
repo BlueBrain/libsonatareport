@@ -19,7 +19,7 @@ MPI_Comm SonataReport::has_nodes_ = MPI_COMM_WORLD;
 SonataReport::communicators_t SonataReport::communicators_;
 #endif
 
-std::unordered_set<std::string> report_types {"compartment", "summation", "synapse", "lfp"};
+std::unordered_set<std::string> report_types{"compartment", "summation", "synapse", "lfp"};
 
 void SonataReport::clear() {
     for (auto& kv : reports_) {
