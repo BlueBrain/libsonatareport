@@ -114,6 +114,16 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
     // Calculate the offset to write into the buffer
     uint32_t offset = static_cast<uint32_t>((step - last_step_recorded_) / reporting_period_);
     uint32_t local_position = last_position_ + total_elements_ * offset;
+
+    if (steps_recorded_ >= num_steps_) {
+        if (SonataReport::rank_ == 0) {
+            logger->trace("Already recorded {} steps, skipping report recording for {} population",
+                          steps_recorded_,
+                          population_name_);
+        }
+        return;
+    }
+
     if (SonataReport::rank_ == 0) {
         logger->trace(
             "Recording data for population {}, step={} last_step_recorded={} steps recorded {} "
@@ -146,6 +156,16 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
 
 void SonataData::record_data(double step) {
     uint32_t local_position = last_position_;
+
+    if (steps_recorded_ >= num_steps_) {
+        if (SonataReport::rank_ == 0) {
+            logger->trace("Already recorded {} steps, skipping report recording for {} population",
+                          steps_recorded_,
+                          population_name_);
+        }
+        return;
+    }
+
     if (SonataReport::rank_ == 0) {
         logger->trace(
             "Recording data for step={} last_step_recorded={} buffer_size={} and offset={}",
