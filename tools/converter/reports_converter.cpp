@@ -10,6 +10,15 @@
 
 using namespace bbpReader;
 
+int get_steps_to_write (const char* var_name) {
+    int steps_to_write = 10;
+    char* var_value = getenv(var_name);
+    if (var_value != nullptr && atoi(var_value) > 0) {
+            steps_to_write = atoi(var_value);
+    }
+    return steps_to_write;
+}
+
 int main(int argc, char* argv[]) {
     if (argc != 3) {
         logger->error("Wrong number of arguments.");
@@ -66,22 +75,25 @@ int main(int argc, char* argv[]) {
     // Generate the initial structure
     sonata_prepare_datasets();
 
-    int total_num_element_ids = frame_parser.getBufferSize_elements();
-    int num_frames = 1;
-    DataItem* all_element_ids_buffer = new DataItem[total_num_element_ids * num_frames];
-    int timestep = 0;
+    uint32_t num_steps = header.getNumberOfSteps();
+    uint32_t num_frames = get_steps_to_write("STEPS_TO_WRITE");
+    uint64_t element_ids_per_frame = frame_parser.getBufferSize_elements();
+    uint64_t total_element_ids = element_ids_per_frame * num_frames;
+    logger->info("Number of frames to write per iteration: '{}'", num_frames);
+    DataItem* all_element_ids_buffer = new DataItem[total_element_ids];
+    uint32_t timestep = 0;
     // Write the timestep frames
     while (frame_parser.hasMore()) {
+        // Check if number of frames to write is not bigger than the remaining
+        if (num_steps - timestep < num_frames) {
+            num_frames = num_steps - timestep;
+        }
         frame_parser.readMultipleFrameData(all_element_ids_buffer, num_frames);
-        std::vector<float> data_element_ids(all_element_ids_buffer,
-                                            all_element_ids_buffer + total_num_element_ids);
-
         sonata_write_buffered_data(report_name.data(),
-                                   data_element_ids.data(),
-                                   data_element_ids.size(),
+                                   all_element_ids_buffer,
+                                   total_element_ids,
                                    num_frames);
-
-        if (timestep % 1000 == 0) {
+        if (timestep % 1000 == 0 && timestep > 0) {
             logger->info("Writing timestep '{}'", timestep);
         }
         timestep += num_frames;
