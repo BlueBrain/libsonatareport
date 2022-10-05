@@ -6,21 +6,36 @@
 #include <bbp/sonata/reports.h>
 #include <utils/logger.h>
 
-int main(int argc, char* argv[]) {
-    const char* file_name = "out.dat";
-    if (argc == 2) {
-        file_name = argv[1];
+static void show_usage(std::string name) {
+    std::cerr << "Usage: " << name << " <spike_filename>\n"
+              << "Options:\n"
+              << "\t-h,--help\tShow this help message\n"
+              << "Example:\n"
+              << "\t " << name << " out.dat" << std::endl;
+}
 
-    } else if (argc > 2) {
-        logger->error("Wrong number of arguments.");
-        logger->info("Try: ./spikes_converter out.dat");
-        return 0;
+bool help(int argc, char* argv[]) {
+    for (int i = 1; i < argc; ++i) {
+        const std::string arg = argv[i];
+        if (arg == "-h" || arg == "--help") {
+            return true;
+        }
     }
+    return false;
+}
+
+int main(int argc, char* argv[]) {
+    if (argc != 2 || help(argc, argv)) {
+        show_usage(argv[0]);
+        return -1;
+    }
+
+    const std::string file_name = argv[1];
     logger->info("Trying to convert '{}' binary report...'", file_name);
     std::ifstream infile(file_name);
     if (!infile) {
         logger->error("File {} not found!", file_name);
-        return 0;
+        return -2;
     }
 
     // remove /scatter
@@ -41,7 +56,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Create a spike file
-    sonata_create_spikefile(".", "out");
+    sonata_create_spikefile(".", file_name.data());
 
     std::string population_name = "All";
     uint64_t population_offset = 0;
@@ -55,7 +70,7 @@ int main(int argc, char* argv[]) {
     // Close the spike file
     sonata_close_spikefile();
 
-    logger->info("File 'out.dat' successfully converted to 'out.h5'");
+    logger->info("File '{}' successfully converted to '{}.h5'", file_name, file_name);
 
     return 0;
 }

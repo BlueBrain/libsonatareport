@@ -10,29 +10,49 @@
 
 using namespace bbpReader;
 
-int get_steps_to_write (const char* var_name) {
+int get_steps_to_write(const char* var_name) {
+    // In general, writing 10 steps per iteration is best performance wise
+    // The environment variable STEPS_TO_WRITE could be overwritten for testing
     int steps_to_write = 10;
     char* var_value = getenv(var_name);
     if (var_value != nullptr && atoi(var_value) > 0) {
-            steps_to_write = atoi(var_value);
+        steps_to_write = atoi(var_value);
     }
     return steps_to_write;
 }
 
-int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        logger->error("Wrong number of arguments.");
-        logger->info("Try: ./reports_converter <filename> <[--soma, --compartment]>");
-        logger->info("Example: ./reports_converter soma.bbp --soma");
-        return 0;
+static void show_usage(std::string name) {
+    std::cerr << "Usage: " << name << " <report_filename> <option(s)>\n"
+              << "Options:\n"
+              << "\t-h,--help\t\t\tShow this help message\n"
+              << "\t<[--soma, --compartment]>\tSelect soma or compartment report\n"
+              << "Examples:\n"
+              << "\t " << name << " soma.bbp --soma\n"
+              << "\t " << name << " compartment.bbp --compartment" << std::endl;
+}
+
+bool help(int argc, char* argv[]) {
+    for (int i = 1; i < argc; ++i) {
+        const std::string arg = argv[i];
+        if (arg == "-h" || arg == "--help") {
+            return true;
+        }
     }
-    const char* file_name = argv[1];
-    std::string report_type = argv[2];
+    return false;
+}
+
+int main(int argc, char* argv[]) {
+    if (argc != 3 || help(argc, argv)) {
+        show_usage(argv[0]);
+        return -1;
+    }
+    const std::string file_name = argv[1];
+    const std::string report_type = argv[2];
     logger->info("Trying to convert '{}' binary report...'", file_name);
     std::ifstream f(file_name);
     if (!f.good()) {
         logger->error("File '{}' not found!", file_name);
-        return 0;
+        return -2;
     }
 
     FrameParser frame_parser(file_name);
