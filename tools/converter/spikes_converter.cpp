@@ -3,6 +3,10 @@
 #include <iostream>
 #include <vector>
 
+#ifdef SONATA_REPORT_HAVE_MPI
+#include <mpi.h>
+#endif
+
 #include <bbp/sonata/reports.h>
 #include <utils/logger.h>
 
@@ -25,6 +29,9 @@ bool help(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
+#ifdef SONATA_REPORT_HAVE_MPI
+    MPI_Init(nullptr, nullptr);
+#endif
     if (argc != 2 || help(argc, argv)) {
         show_usage(argv[0]);
         return -1;
@@ -72,5 +79,8 @@ int main(int argc, char* argv[]) {
 
     logger->info("File '{}' successfully converted to '{}.h5'", file_name, file_name);
 
+#ifdef SONATA_REPORT_HAVE_MPI
+    MPI_Finalize();
+#endif
     return 0;
 }

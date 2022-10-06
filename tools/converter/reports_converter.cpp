@@ -4,6 +4,10 @@
 #include <map>
 #include <vector>
 
+#ifdef SONATA_REPORT_HAVE_MPI
+#include <mpi.h>
+#endif
+
 #include "binary_reader/ReadManager.h"
 #include <bbp/sonata/reports.h>
 #include <utils/logger.h>
@@ -42,6 +46,9 @@ bool help(int argc, char* argv[]) {
 }
 
 int main(int argc, char* argv[]) {
+#ifdef SONATA_REPORT_HAVE_MPI
+    MPI_Init(nullptr, nullptr);
+#endif
     if (argc != 3 || help(argc, argv)) {
         show_usage(argv[0]);
         return -1;
@@ -120,5 +127,9 @@ int main(int argc, char* argv[]) {
     }
     logger->info("'{}' timesteps written!", timestep);
     logger->info("File '{}' successfully converted to '{}.h5'", file_name, report_name);
+
+#ifdef SONATA_REPORT_HAVE_MPI
+    MPI_Finalize();
+#endif
     return 0;
 }
