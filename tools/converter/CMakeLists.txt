@@ -14,7 +14,7 @@ target_compile_options(spikes_converter
 target_link_libraries(spikes_converter
     PUBLIC sonata_report
     PRIVATE spdlog::spdlog_header_only
-    PRIVATE ${MPI_CXX_LIBRARIES}
+    PRIVATE ${MPI_C_LIBRARIES}
 )
 
 add_executable(reports_converter reports_converter.cpp)
@@ -32,7 +32,7 @@ target_link_libraries(reports_converter
     PUBLIC sonata_report
     PUBLIC binary_reader
     PRIVATE spdlog::spdlog_header_only
-    PRIVATE ${MPI_CXX_LIBRARIES}
+    PRIVATE ${MPI_C_LIBRARIES}
 )
 
 install(TARGETS spikes_converter DESTINATION bin)

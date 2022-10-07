@@ -697,7 +697,6 @@ namespace bbpReader {
         void readFrameMapping(MappingItem* buffer);
         void readFrameData(DataItem* buffer);  // reads data of next frame and advances to the frame
                                                // after. Data is sorted by GID and segment num
-        void readMultipleFrameData(DataItem* buffer, int num_frames);
 
         /*getReferences()
          * returns a vector of vectors of offsets that correspond to the relevant segments inside

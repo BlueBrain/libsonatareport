@@ -1,0 +1,26 @@
+#! /bin/sh
+
+@PROJECT_BINARY_DIR@/tools/converter/spikes_converter @CMAKE_CURRENT_SOURCE_DIR@/spikes.ref
+@PROJECT_BINARY_DIR@/tools/converter/reports_converter @CMAKE_CURRENT_SOURCE_DIR@/soma.ref --soma
+ref_spikes=@CMAKE_CURRENT_SOURCE_DIR@/spikes.ref.h5
+ref_soma=@CMAKE_CURRENT_SOURCE_DIR@/soma.ref.h5
+
+h5diff -c spikes.ref.h5 $ref_spikes /spikes/All/timestamps > diff_spikes.dat 2>&1
+h5diff -c spikes.ref.h5 $ref_spikes /spikes/All/node_ids > diff_spikes.dat 2>&1
+h5diff -c soma.ref.h5 $ref_soma /report/All/data > diff_soma.dat 2>&1
+
+if [ -s diff_spikes.dat ]
+then
+  echo "Spike results are different, check the file diff_spikes.dat. Test failed!"
+  cat diff_spikes.dat
+  exit 1
+elif [ -s diff_soma.dat ]
+then
+  echo "Soma results are different, check the file diff_soma.dat. Test failed!"
+  cat diff_soma.dat
+  exit 1
+else
+  echo "Results are the same, test passed"
+  rm -f *.dat
+  exit 0
+fi

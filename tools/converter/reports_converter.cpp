@@ -14,17 +14,6 @@
 
 using namespace bbpReader;
 
-int get_steps_to_write(const char* var_name) {
-    // In general, writing 10 steps per iteration is best performance wise
-    // The environment variable STEPS_TO_WRITE could be overwritten for testing
-    int steps_to_write = 10;
-    char* var_value = getenv(var_name);
-    if (var_value != nullptr && atoi(var_value) > 0) {
-        steps_to_write = atoi(var_value);
-    }
-    return steps_to_write;
-}
-
 static void show_usage(std::string name) {
     std::cerr << "Usage: " << name << " <report_filename> <option(s)>\n"
               << "Options:\n"
@@ -65,8 +54,7 @@ int main(int argc, char* argv[]) {
     FrameParser frame_parser(file_name);
     Header header = frame_parser.getHeader();
 
-    std::string filename = file_name;
-    std::string report_name = filename.substr(filename.find_last_of("/\\") + 1);
+    std::string report_name = file_name.substr(file_name.find_last_of("/\\") + 1);
 
     // Get header information in order to create the report
     double tstart = header.getStartTime();
@@ -103,27 +91,20 @@ int main(int argc, char* argv[]) {
     sonata_prepare_datasets();
 
     uint32_t num_steps = header.getNumberOfSteps();
-    uint32_t num_frames = get_steps_to_write("STEPS_TO_WRITE");
     uint64_t element_ids_per_frame = frame_parser.getBufferSize_elements();
-    uint64_t total_element_ids = element_ids_per_frame * num_frames;
-    logger->info("Number of frames to write per iteration: '{}'", num_frames);
-    DataItem* all_element_ids_buffer = new DataItem[total_element_ids];
+    DataItem* element_ids_buffer = new DataItem[element_ids_per_frame];
     uint32_t timestep = 0;
     // Write the timestep frames
     while (frame_parser.hasMore()) {
-        // Check if number of frames to write is not bigger than the remaining
-        if (num_steps - timestep < num_frames) {
-            num_frames = num_steps - timestep;
-        }
-        frame_parser.readMultipleFrameData(all_element_ids_buffer, num_frames);
+        frame_parser.readFrameData(element_ids_buffer);
         sonata_write_buffered_data(report_name.data(),
-                                   all_element_ids_buffer,
-                                   total_element_ids,
-                                   num_frames);
+                                   element_ids_buffer,
+                                   element_ids_per_frame,
+                                   1);  // Number of frames to write
         if (timestep % 1000 == 0 && timestep > 0) {
             logger->info("Writing timestep '{}'", timestep);
         }
-        timestep += num_frames;
+        timestep++;
     }
     logger->info("'{}' timesteps written!", timestep);
     logger->info("File '{}' successfully converted to '{}.h5'", file_name, report_name);

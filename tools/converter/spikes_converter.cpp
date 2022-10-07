@@ -63,7 +63,8 @@ int main(int argc, char* argv[]) {
     }
 
     // Create a spike file
-    sonata_create_spikefile(".", file_name.data());
+    std::string report_name = file_name.substr(file_name.find_last_of("/\\") + 1);
+    sonata_create_spikefile(".", report_name.data());
 
     std::string population_name = "All";
     uint64_t population_offset = 0;
@@ -77,7 +78,7 @@ int main(int argc, char* argv[]) {
     // Close the spike file
     sonata_close_spikefile();
 
-    logger->info("File '{}' successfully converted to '{}.h5'", file_name, file_name);
+    logger->info("File '{}' successfully converted to '{}.h5'", file_name, report_name);
 
 #ifdef SONATA_REPORT_HAVE_MPI
     MPI_Finalize();

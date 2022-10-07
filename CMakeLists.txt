@@ -97,7 +97,7 @@ if(SONATA_REPORT_ENABLE_MPI)
     else()
         if (HDF5_FOUND)
             # Avoid NOTFOUND error
-            set(MPI_CXX_LIBRARIES "")
+            set(MPI_C_LIBRARIES "")
             message(STATUS "HDF5 found, Using reporting serial implementation")
         else()
             message(FATAL_ERROR "No MPI or HDF5 found")
