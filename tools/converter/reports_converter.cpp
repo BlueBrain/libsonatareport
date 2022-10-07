@@ -90,7 +90,6 @@ int main(int argc, char* argv[]) {
     // Generate the initial structure
     sonata_prepare_datasets();
 
-    uint32_t num_steps = header.getNumberOfSteps();
     uint64_t element_ids_per_frame = frame_parser.getBufferSize_elements();
     DataItem* element_ids_buffer = new DataItem[element_ids_per_frame];
     uint32_t timestep = 0;
