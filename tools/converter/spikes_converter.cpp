@@ -11,11 +11,13 @@
 #include <utils/logger.h>
 
 static void show_usage(std::string name) {
-    std::cerr << "Usage: " << name << " <spike_filename>\n"
+    std::cerr << "Usage: " << name << " <spike_filename> [population_name]\n"
               << "Options:\n"
-              << "\t-h,--help\tShow this help message\n"
+              << "\t-h,--help\t\tShow this help message\n"
+              << "\tspike_filename\t\tName of the report to convert\n"
+              << "\tpopulation_name\t\tName of the report population (Default 'All')\n"
               << "Example:\n"
-              << "\t " << name << " out.dat" << std::endl;
+              << "\t " << name << " out.dat PopulationA" << std::endl;
 }
 
 bool help(int argc, char* argv[]) {
@@ -32,12 +34,16 @@ int main(int argc, char* argv[]) {
 #ifdef SONATA_REPORT_HAVE_MPI
     MPI_Init(nullptr, nullptr);
 #endif
-    if (argc != 2 || help(argc, argv)) {
+    if ((argc != 2 && argc != 3) || help(argc, argv)) {
         show_usage(argv[0]);
         return -1;
     }
 
     const std::string file_name = argv[1];
+    std::string population_name = "All";
+    if (argc == 3) {
+        population_name = argv[2];
+    }
     logger->info("Trying to convert '{}' binary report...'", file_name);
     std::ifstream infile(file_name);
     if (!infile) {
@@ -66,7 +72,6 @@ int main(int argc, char* argv[]) {
     std::string report_name = file_name.substr(file_name.find_last_of("/\\") + 1);
     sonata_create_spikefile(".", report_name.data());
 
-    std::string population_name = "All";
     uint64_t population_offset = 0;
     sonata_add_spikes_population(population_name.data(),
                                  population_offset,

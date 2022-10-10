@@ -15,13 +15,15 @@
 using namespace bbpReader;
 
 static void show_usage(std::string name) {
-    std::cerr << "Usage: " << name << " <report_filename> <option(s)>\n"
+    std::cerr << "Usage: " << name << " <report_filename> <report_type> [population_name]\n"
               << "Options:\n"
-              << "\t-h,--help\t\t\tShow this help message\n"
-              << "\t<[--soma, --compartment]>\tSelect soma or compartment report\n"
+              << "\t-h,--help\t\tShow this help message\n"
+              << "\treport_filename\t\tName of the report to convert\n"
+              << "\treport_type\t\t'--soma' or '--compartment' required\n"
+              << "\tpopulation_name\t\tName of the report population (Default 'All')\n"
               << "Examples:\n"
-              << "\t " << name << " soma.bbp --soma\n"
-              << "\t " << name << " compartment.bbp --compartment" << std::endl;
+              << "\t " << name << " soma.bbp --soma PopulationA\n"
+              << "\t " << name << " compartment.bbp --compartment PopulationB" << std::endl;
 }
 
 bool help(int argc, char* argv[]) {
@@ -38,12 +40,20 @@ int main(int argc, char* argv[]) {
 #ifdef SONATA_REPORT_HAVE_MPI
     MPI_Init(nullptr, nullptr);
 #endif
-    if (argc != 3 || help(argc, argv)) {
+    if ((argc != 3 && argc != 4) || help(argc, argv)) {
         show_usage(argv[0]);
         return -1;
     }
     const std::string file_name = argv[1];
     const std::string report_type = argv[2];
+    if (report_type != "--soma" && report_type != "--compartment") {
+        logger->error("report type: --soma or --compartment required");
+        return -3;
+    }
+    std::string population_name = "All";
+    if (argc == 4) {
+        population_name = argv[3];
+    }
     logger->info("Trying to convert '{}' binary report...'", file_name);
     std::ifstream f(file_name);
     if (!f.good()) {
@@ -70,10 +80,10 @@ int main(int argc, char* argv[]) {
     std::vector<CellID> node_ids(1);
     for (FrameInfo::const_iterator it = cells.begin(); it != cells.end(); ++it) {
         node_ids[0] = it->getCellNum();
-        sonata_add_node(report_name.data(), "All", 0, it->getCellNum());
+        sonata_add_node(report_name.data(), population_name.data(), 0, it->getCellNum());
 
         if (report_type == "--soma") {
-            sonata_add_element(report_name.data(), "All", node_ids[0], 0, nullptr);
+            sonata_add_element(report_name.data(), population_name.data(), node_ids[0], 0, nullptr);
         } else {  // --compartment
             FrameParser frame_parser_gid(file_name, node_ids);
             int num_element_ids = frame_parser_gid.getBufferSize_elements();
@@ -83,7 +93,8 @@ int main(int argc, char* argv[]) {
             std::vector<uint32_t> element_ids(element_ids_buffer,
                                               element_ids_buffer + num_element_ids);
             for (auto& element : element_ids) {
-                sonata_add_element(report_name.data(), "All", node_ids[0], element, nullptr);
+                sonata_add_element(
+                    report_name.data(), population_name.data(), node_ids[0], element, nullptr);
             }
         }
     }
