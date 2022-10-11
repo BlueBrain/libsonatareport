@@ -1,7 +1,6 @@
 // Author: Dr Konstantinos Sfyrakis
 
-#ifndef CROSSPLATFORMCONVERSION_H_
-#define CROSSPLATFORMCONVERSION_H_
+#pragma once
 
 #define SMALL_NUM 0.00000001            // anything that avoids division overflow
 #define ABS(x) ((x) >= 0 ? (x) : -(x))  // absolute value
@@ -24,5 +23,3 @@ inline void ByteSwap(unsigned char* b, int n) {
         i++, j--;
     }
 }
-
-#endif /*CROSSPLATFORMCONVERSION_H_*/

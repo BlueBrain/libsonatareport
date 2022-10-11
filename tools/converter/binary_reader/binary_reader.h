@@ -1,5 +1,4 @@
-#ifndef _ReadManager__
-#define _ReadManager__
+#pragma once
 /** For reference: git@bbpgitlab.epfl.ch:hpc/reportinglib.git */
 
 #include <stdint.h>
@@ -14,9 +13,8 @@
 #include <stdexcept>
 #include <vector>
 
-#include "BinaryPositions.h"
-
-#include "crossPlatformConversion.h"
+#include "binary_positions.h"
+#include "cross_platform_conversion.h"
 
 /*Terminology:
  * Compartment: lowest subdivision of cell. (cannot be broken down further)
@@ -27,7 +25,8 @@
  * See documentation for further naming conventions.
  */
 
-namespace bbpReader {
+namespace bbp {
+namespace binary_reader {
 
 // class list:
 class Header;
@@ -35,13 +34,10 @@ class CellInfo;
 class FrameInfo;
 class CompartmentMapping;
 class SectionData;
-// class SectionData::Identifier;
 class Identifier;
 class CellData;
 class ReadManager;
 class FrameParser;
-// class FrameParser::FrameOrganiser;
-// class FrameParser::ReadOptimiser;
 // end class list
 
 // type conventions:
@@ -74,12 +70,11 @@ enum SortingKey { SID, LOC };  // sorting specifier for sections.
 namespace baseTypes {
 // these typedefs define from which STL some of the clases are derived from
 
-typedef std::set<bbpReader::CellInfo> FrameInfo;
+typedef std::set<bbp::binary_reader::CellInfo> FrameInfo;
 typedef std::vector<MappingItem> CompartmentMapping;
 typedef std::vector<DataItem> SectionData;
-// typedef std::map<bbpReader::SegmentData::Identifier,bbpReader::SegmentData>
 // CellData; done blow
-typedef std::map<bbpReader::CellInfo, bbpReader::CellData> FrameOrganiser;
+typedef std::map<bbp::binary_reader::CellInfo, bbp::binary_reader::CellData> FrameOrganiser;
 typedef std::vector<std::ios::off_type> ReadOptimiser;
 }  // namespace baseTypes
 
@@ -88,81 +83,81 @@ typedef std::vector<std::ios::off_type> ReadOptimiser;
 class Header
 {
   private:
-    bool isNative;
+    bool is_native;
 
     // header info
-    uint32_t headerSize;
-    std::string libraryVersion;
-    std::string simulatorVersion;
-    CellCount amountOfCells;
-    FrameDataCount totalAmountOfCompartments;
-    FrameCount numberOfSteps;
-    Time startTime;
-    Time endTime;
+    uint32_t header_size;
+    std::string library_version;
+    std::string simulator_version;
+    CellCount amount_of_cells;
+    FrameDataCount total_amount_of_compartments;
+    FrameCount number_of_steps;
+    Time start_time;
+    Time end_time;
     Time dt;
-    std::string dataUnit;
-    std::string timeUnit;
-    FrameDataCount mappingSize;
-    std::string mappingName;
-    FrameDataCount extraMappingSize;
-    std::string extraMappingName;
-    std::string targetName;
+    std::string data_unit;
+    std::string time_unit;
+    FrameDataCount mapping_size;
+    std::string mapping_name;
+    FrameDataCount extra_mapping_size;
+    std::string extra_mapping_name;
+    std::string target_name;
 
   public:
     Header()
-        : headerSize(0) {}
-    Header(char* readBuffer);
+        : header_size(0) {}
+    Header(char* read_buffer);
     // Header(const Header& source);
 
     bool operator==(const Header& h1) const;
 
     // get methods:
-    inline bool sourceIsNative() const {
-        return isNative;
+    inline bool source_is_native() const {
+        return is_native;
     }
-    inline std::string getLibraryVersion() const {
-        return libraryVersion;
+    inline std::string get_library_version() const {
+        return library_version;
     }
-    inline std::string getSimulatorVersion() const {
-        return simulatorVersion;
+    inline std::string get_simulator_version() const {
+        return simulator_version;
     }
-    inline CellCount getNumberOfCells() const {
-        return amountOfCells;
+    inline CellCount get_number_of_cells() const {
+        return amount_of_cells;
     }
-    inline FrameDataCount getTotalNumberOfCompartments() const {
-        return totalAmountOfCompartments;
+    inline FrameDataCount get_total_number_of_compartments() const {
+        return total_amount_of_compartments;
     }
-    inline FrameCount getNumberOfSteps() const {
-        return numberOfSteps;
+    inline FrameCount get_number_of_steps() const {
+        return number_of_steps;
     }
-    inline std::string getMappingName() const {
-        return mappingName;
+    inline std::string get_mapping_name() const {
+        return mapping_name;
     }
-    inline std::string getExtraMappingName() const {
-        return extraMappingName;
+    inline std::string get_extra_mapping_name() const {
+        return extra_mapping_name;
     }
-    inline std::string getDataUnit() const {
-        return dataUnit;
+    inline std::string get_data_unit() const {
+        return data_unit;
     }
-    inline std::string getTimeUnit() const {
-        return timeUnit;
+    inline std::string get_time_unit() const {
+        return time_unit;
     }
-    inline FrameDataCount getMappingSize() const {
-        return mappingSize;
+    inline FrameDataCount get_mapping_size() const {
+        return mapping_size;
     }
-    inline FrameDataCount getExtraMappingSize() const {
-        return extraMappingSize;
+    inline FrameDataCount get_extra_mapping_size() const {
+        return extra_mapping_size;
     }
-    inline std::string getTargetName() const {
-        return targetName;
+    inline std::string get_target_name() const {
+        return target_name;
     }
-    inline Time getStartTime() const {
-        return startTime;
+    inline Time get_start_time() const {
+        return start_time;
     }
-    inline Time getEndTime() const {
-        return endTime;
+    inline Time get_end_time() const {
+        return end_time;
     }
-    inline Time getTimeStepSize() const {
+    inline Time get_time_step_size() const {
         return dt;
     }
     // end get methods
@@ -171,12 +166,12 @@ class Header
 class CellInfo
 {
   private:
-    CellID cellNum;
-    CellDataCount amountOfCompartments;
+    CellID cell_num;
+    CellDataCount amount_of_compartments;
 
-    std::ios::off_type dataLocation;
-    std::ios::off_type extraMappingLocation;
-    std::ios::off_type mappingLocation;
+    std::ios::off_type data_location;
+    std::ios::off_type extra_mapping_location;
+    std::ios::off_type mapping_location;
 
     void* master;
 
@@ -184,7 +179,7 @@ class CellInfo
     enum key { GID, LOCATION };
 
     CellInfo();
-    CellInfo(char* readBuffer, bool isNative = true, key cmp = GID);
+    CellInfo(char* read_buffer, bool is_native = true, key cmp = GID);
 
     bool operator==(const CellInfo& c1) const;
     bool operator!=(const CellInfo& c1) const;
@@ -193,27 +188,27 @@ class CellInfo
     bool operator<(const CellInfo& c1) const;
     bool operator>(const CellInfo& c1) const;
 
-    inline std::ios::off_type getDataLocation() const {
-        return dataLocation;
+    inline std::ios::off_type get_data_location() const {
+        return data_location;
     }
 
-    inline std::ios::off_type getMappingLocation() const {
-        return mappingLocation;
+    inline std::ios::off_type get_mapping_location() const {
+        return mapping_location;
     }
 
-    inline std::ios::off_type getExtraMappingLocation() const {
-        return extraMappingLocation;
+    inline std::ios::off_type get_extra_mapping_location() const {
+        return extra_mapping_location;
     }
 
-    inline CellID getCellNum() const {
-        return cellNum;
+    inline CellID get_cell_num() const {
+        return cell_num;
     }
 
-    inline CellDataCount getAmountOfCompartments() const {
-        return amountOfCompartments;
+    inline CellDataCount get_amount_of_compartments() const {
+        return amount_of_compartments;
     }
 
-    static bool compareByOffset(const CellInfo& c1, const CellInfo& c2);
+    static bool compare_by_offset(const CellInfo& c1, const CellInfo& c2);
 };
 
 class FrameInfo: private baseTypes::FrameInfo
@@ -221,17 +216,17 @@ class FrameInfo: private baseTypes::FrameInfo
   private:
     typedef baseTypes::FrameInfo Base;
     typedef std::map<CellID, iterator> Lookup;
-    Lookup gidLookup;
+    Lookup gid_lookup;
 
   public:
     typedef Base::const_iterator const_iterator;
 
     FrameInfo() {}
     FrameInfo(char* buffer,
-              char* endOfBuffer,
-              bool isNative = true,
-              CellInfo::key sortMode = CellInfo::GID);
-    FrameInfo& filterGIDs(const std::vector<CellID>& gids);
+              char* end_of_buffer,
+              bool is_native = true,
+              CellInfo::key sort_mode = CellInfo::GID);
+    FrameInfo& filter_gids(const std::vector<CellID>& gids);
 
     /**
      * Copy constructor.  Needed to ensure set iterators reference the correct collection
@@ -244,7 +239,7 @@ class FrameInfo: private baseTypes::FrameInfo
     FrameInfo& operator=(const FrameInfo& rhs);
 
     inline const CellInfo& operator[](CellID gid) {
-        return *gidLookup[gid];
+        return *gid_lookup[gid];
     }
 
     inline const_iterator begin() const {
@@ -266,7 +261,7 @@ class CompartmentMapping: public baseTypes::CompartmentMapping
 
     CompartmentMapping();
     CompartmentMapping(MappingItem* start, MappingItem* end);
-    CompartmentMapping(MappingItem* buffer, SizeType bufSize);
+    CompartmentMapping(MappingItem* buffer, SizeType buf_size);
 };
 
 class SectionData: public baseTypes::SectionData
@@ -277,17 +272,17 @@ class SectionData: public baseTypes::SectionData
   public:
     class Identifier;
     SectionData();
-    SectionData(DataItem firstData);
+    SectionData(DataItem first_data);
     SectionData(DataItem* start, DataItem* end);
 
     bool operator==(const SectionData& s1);
     bool operator!=(const SectionData& s1);
 
-    inline SectionDataCount numOfCompartments() {
+    inline SectionDataCount num_of_compartments() {
         return size();
     }
 
-    static bool compareByOriginalLocation(const Identifier& c1, const Identifier& c2);
+    static bool compare_by_original_location(const Identifier& c1, const Identifier& c2);
 };
 
 class SectionData::Identifier
@@ -336,17 +331,18 @@ class SectionData::Identifier
         return sid;
     }
 
-    inline MappingItem getSID() const {
+    inline MappingItem get_sid() const {
         return sid;
     }
 
-    inline SectionIndex getLocation() const {
+    inline SectionIndex get_location() const {
         return loc;
     }
 };
 
 namespace baseTypes {
-typedef std::map<bbpReader::SectionData::Identifier, bbpReader::SectionData> CellData;
+typedef std::map<bbp::binary_reader::SectionData::Identifier, bbp::binary_reader::SectionData>
+    CellData;
 }
 
 class CellData: public baseTypes::CellData
@@ -355,22 +351,22 @@ class CellData: public baseTypes::CellData
     typedef baseTypes::CellData Base;
     typedef std::map<MappingItem, iterator> Lookup;
 
-    SortingKey sectSort;
-    Lookup sidLookup;
+    SortingKey sect_sort;
+    Lookup sid_lookup;
 
   public:
     CellData();
-    CellData(const SortingKey segmentSorting = SID);
-    CellData(const DataItem* dataBuffer, const CompartmentMapping& mapping);
-    void fillData(const DataItem* dataBuffer, const CompartmentMapping& mapping);
+    CellData(const SortingKey segment_sorting = SID);
+    CellData(const DataItem* data_buffer, const CompartmentMapping& mapping);
+    void fill_data(const DataItem* data_buffer, const CompartmentMapping& mapping);
 
     inline iterator find(const SectionData::Identifier& i) {
         return Base::find(i);
     }
 
     inline iterator find(const MappingItem& map_find) {
-        Lookup::iterator match = sidLookup.find(map_find);
-        if (match == sidLookup.end())
+        Lookup::iterator match = sid_lookup.find(map_find);
+        if (match == sid_lookup.end())
             return end();
         else
             return match->second;
@@ -389,31 +385,31 @@ class ReadManager: public std::ifstream
     typedef Base::pos_type FilePosition;
 
   private:
-    FileOffset cellInfoOrigin;  // position in file where cell info starts (after header)
+    FileOffset cell_info_origin;  // position in file where cell info starts (after header)
 
-    bool isNative;  // indicates whether file is originated from an architecture that arranges
-                    // variables in same byte order
+    bool is_native;  // indicates whether file is originated from an architecture that arranges
+                     // variables in same byte order
 
-    FrameDataCount mappingSize_floats;
+    FrameDataCount mapping_size_floats;
 
-    FileOffset startLocation;
-    FileOffset mappingLocation;
+    FileOffset start_location;
+    FileOffset mapping_location;
 
-    inline void seekgStart() {
-        seekg(startLocation, beg);
+    inline void seekg_start() {
+        seekg(start_location, beg);
     }
 
-    static CellInfo makeNullInfo();
+    static CellInfo make_null_info();
 
   protected:
-    inline FileOffset getStartOffset() {
-        return startLocation;
+    inline FileOffset get_start_offset() {
+        return start_location;
     }
 
   public:
     static const CellInfo _null_info;
 
-    Header fileInfo;
+    Header file_info;
 
     ReadManager();
 
@@ -422,54 +418,54 @@ class ReadManager: public std::ifstream
      *
      * @param filePath The bbp binary report file to open
      */
-    explicit ReadManager(const std::string& filePath);
+    explicit ReadManager(const std::string& file_path);
 
     /**
      * Opens the filename specified provided this object has not already opened a file
      *
-     * @param filePath The bbp binary report file to open
+     * @param file_path The bbp binary report file to open
      */
-    void open(const std::string& filePath);
+    void open(const std::string& file_path);
 
     // Find the cell's info which corresponds to cellNum (note: cellNum is not the cell index in
     // the file)
-    CellInfo retrieveFindCell(CellID cellNum);
+    CellInfo retrieve_find_cell(CellID cell_num);
 
     // Retrieve  global (time invariant) information of a cell (not actual data of the cell)
-    CellInfo retrieveCellInfo(CellIndex cellIndex, CellInfo::key sortMode = CellInfo::LOCATION);
+    CellInfo retrieve_cell_info(CellIndex cell_index, CellInfo::key sort_mode = CellInfo::LOCATION);
 
     // NOTE: its highly recommended to either disable cache (set to 0) or set cache size to
     // unlimited (set to -1) before using this method:
-    FrameInfo retrieveAllCellInfo(CellInfo::key sortMode = CellInfo::LOCATION);
+    FrameInfo retrieve_all_cell_info(CellInfo::key sort_mode = CellInfo::LOCATION);
 
     /*seekg*:
      * all the seekg functions below are wrapping around the original iostream seekg method.
      */
 
-    inline void seekgCellInfo(CellIndex cellIndex = 0) {
-        seekg(cellInfoOrigin);
-        if (cellIndex)
-            seekg(cellIndex * SIZE_CELL_INFO_LENGTH, cur);
+    inline void seekg_cell_info(CellIndex cell_index = 0) {
+        seekg(cell_info_origin);
+        if (cell_index)
+            seekg(cell_index * SONATA_REPORT_SIZE_CELL_INFO_LENGTH, cur);
     }
 
-    inline void seekgData(const CellInfo& cellSpec, FrameIndex timeStep = 0) {
-        seekg(cellSpec.getDataLocation() + timeStep * getFrameSize_bytes(), beg);
+    inline void seekg_data(const CellInfo& cell_spec, FrameIndex time_step = 0) {
+        seekg(cell_spec.get_data_location() + time_step * get_frame_size_bytes(), beg);
     }
 
-    inline void seekgMapping(const CellInfo& cellSpec) {
-        seekg(cellSpec.getMappingLocation(), beg);
+    inline void seekg_mapping(const CellInfo& cell_spec) {
+        seekg(cell_spec.get_mapping_location(), beg);
     }
 
-    inline void seekgExtraMapping(const CellInfo& cellSpec) {
-        seekg(cellSpec.getExtraMappingLocation(), beg);
+    inline void seekg_extra_mapping(const CellInfo& cell_spec) {
+        seekg(cell_spec.get_extra_mapping_location(), beg);
     }
 
-    inline void seekgMappingStart() {
-        seekg(mappingLocation, beg);
+    inline void seekg_mapping_start() {
+        seekg(mapping_location, beg);
     }
 
-    inline void seekgFrame(FrameIndex timeStep) {
-        seekg(startLocation + getFrameSize_bytes() * timeStep);
+    inline void seekg_frame(FrameIndex time_step) {
+        seekg(start_location + get_frame_size_bytes() * time_step);
     }
 
     /*read():
@@ -491,12 +487,12 @@ class ReadManager: public std::ifstream
     ReadManager& read(datatype* buffer, std::streamsize num) {
         Base::read((char*) buffer, num * sizeof(datatype));
 
-        if (sizeof(datatype) != 1 && !isNative)  // a good compiler should not include this
-                                                 // entire if statement when this function is
-                                                 // reading single byte items.
+        if (sizeof(datatype) != 1 && !is_native)  // a good compiler should not include this
+                                                  // entire if statement when this function is
+                                                  // reading single byte items.
             // This if is to avoid entering an empty loop. Otherwise could have been done in
             // switch below.
-            for (datatype* endOfBuffer = buffer + num; buffer < endOfBuffer; buffer++)
+            for (datatype* end_of_buffer = buffer + num; buffer < end_of_buffer; buffer++)
                 switch (sizeof(datatype)) {  // metamorphic switch
                 case 8:                      // double, int64_t, offsets etc
                     DOUBLESWAP(*buffer);
@@ -520,7 +516,7 @@ class ReadManager: public std::ifstream
      * and exit execution if an error occured.
      */
 
-    void checkState();
+    void check_state();
 
     /*getFrameSize:
      * returns the number of bytes that hold the data of all compartments of all cells for a
@@ -529,8 +525,8 @@ class ReadManager: public std::ifstream
      * use fileInfo.getTotalNumberOfCompartments() instead for number of floats.
      */
 
-    inline std::streamsize getFrameSize_bytes() const {
-        return fileInfo.getTotalNumberOfCompartments() * sizeof(DataItem);
+    inline std::streamsize get_frame_size_bytes() const {
+        return file_info.get_total_number_of_compartments() * sizeof(DataItem);
     }
 
     /*getMappingSize:
@@ -539,8 +535,8 @@ class ReadManager: public std::ifstream
      * please note that this is in bytes not floats.
      */
 
-    inline std::streamsize getMappingSize_bytes() const {
-        return mappingSize_floats * sizeof(MappingItem);
+    inline std::streamsize get_mapping_size_bytes() const {
+        return mapping_size_floats * sizeof(MappingItem);
     }
 
     // The following are low level c-style reading interfaces for max performance - they provide
@@ -553,20 +549,20 @@ class ReadManager: public std::ifstream
      * (NOT float).
      */
 
-    void readFrameMapping(MappingItem* buffer);
+    void read_frame_mapping(MappingItem* buffer);
 
     /*readFrame:
-     * will fill dataBuffer with data from next frame.
-     * use seekgFrame() to specify timestep.
-     * use fileInfo.getTotalNumberOfCompartments() to determine the size of buffer
+     * will fill data_buffer with data from next frame.
+     * use seekg_frame() to specify timestep.
+     * use fileInfo.get_total_number_of_compartments() to determine the size of buffer
      */
-    void readFrame(DataItem* dataBuffer);
+    void read_frame(DataItem* data_buffer);
 
   private:
     /**
      * Upon opening a report file, read the header with metadata
      */
-    void readHeader();
+    void read_header();
 };
 
 class FrameParser: protected ReadManager
@@ -579,89 +575,89 @@ class FrameParser: protected ReadManager
     class FrameOrganiser: public baseTypes::FrameOrganiser
     {
       private:
-        SortingKey sectSort;
+        SortingKey sect_sort;
 
       public:
         FrameOrganiser();
-        explicit FrameOrganiser(SortingKey sectionSorting);
+        explicit FrameOrganiser(SortingKey section_sorting);
 
-        void fillData(const FrameInfo& info,
-                      const std::vector<CompartmentMapping>& mapping,
-                      const float* dataBuffer);
+        void fill_data(const FrameInfo& info,
+                       const std::vector<CompartmentMapping>& mapping,
+                       const float* data_buffer);
 
-        void makeOrderedDataBuffer(DataItem* buffer) const;
+        void make_ordered_data_buffer(DataItem* buffer) const;
 
-        CompartmentIndexing makeOrderedOffsetReferences() const;
-        CompartmentCounts makeOrderedSegSizes() const;
+        CompartmentIndexing make_ordered_offset_references() const;
+        CompartmentCounts make_ordered_seg_sizes() const;
     };
 
     class ReadOptimiser: public baseTypes::ReadOptimiser
     {
       private:
-        void updateOffsets(size_t newSize);
+        void update_offsets(size_t new_size);
 
       protected:
-        FileOffset firstOffset;
-        FrameDataCount dataSize_elements;
+        FileOffset first_offset;
+        FrameDataCount data_size_elements;
 
-        size_t elementSize;
-        static size_t defaultElementSize;
+        size_t element_size;
+        static size_t default_element_size;
 
       public:
         ReadOptimiser();
-        explicit ReadOptimiser(std::streamsize frameSize_bytes);
-        ReadOptimiser(const FrameInfo& cellsToRead,
-                      std::streamsize frameSize_bytes,
-                      FilePosition startLocation);
+        explicit ReadOptimiser(std::streamsize frame_size_bytes);
+        ReadOptimiser(const FrameInfo& cells_to_read,
+                      std::streamsize frame_size_bytes,
+                      FilePosition start_location);
 
-        inline FileOffset getFirst() const {
-            return firstOffset;
+        inline FileOffset get_first() const {
+            return first_offset;
         }
 
-        inline FrameDataCount getDataSize_elements() const {
-            return dataSize_elements;
+        inline FrameDataCount get_data_size_elements() const {
+            return data_size_elements;
         }
 
-        inline void setElementSize(size_t newSize) {
-            if (newSize != elementSize) {
-                updateOffsets(newSize);
-                elementSize = newSize;
+        inline void set_element_size(size_t new_size) {
+            if (new_size != element_size) {
+                update_offsets(new_size);
+                element_size = new_size;
             }
         }
 
-        static inline void setDefaultElementSize(size_t newDefault) {
-            defaultElementSize = newDefault;
+        static inline void set_default_element_size(size_t new_default) {
+            default_element_size = new_default;
         }
 
-        inline size_t getElementSize() const {
-            return elementSize;
+        inline size_t get_element_size() const {
+            return element_size;
         }
     };
 
-    void readFrame(DataItem* buffer);
+    void read_frame(DataItem* buffer);
 
   private:
-    DataItem* readBuffer;
-    DataItem** refArray;
+    DataItem* read_buffer;
+    DataItem** ref_array;
 
     ReadOptimiser offsets;
     FrameOrganiser org;
 
     FrameIndex timestep;
 
-    void createReferences(const FrameInfo& cinfo, bool sortData);
+    void create_references(const FrameInfo& cinfo, bool sort_data);
 
-    void bufferTransfer(DataItem* target) const;
+    void buffer_transfer(DataItem* target) const;
 
   public:
     /*Constructor:
      * Will read next frame of data and parse it into a map of CellData structure from file.
      */
     FrameParser();
-    FrameParser(const std::string& file, bool sortData = true);
+    FrameParser(const std::string& file, bool sort_data = true);
     FrameParser(const std::string& file,
-                const std::vector<CellID>& gidTarget,
-                bool sortData = true);
+                const std::vector<CellID>& gid_target,
+                bool sort_data = true);
     ~FrameParser();
 
     /*retarget:
@@ -671,17 +667,17 @@ class FrameParser: protected ReadManager
      */
 
     inline FrameIndex simtime2index(Time time) {
-        return (FrameIndex)((time - fileInfo.getStartTime()) / fileInfo.getTimeStepSize());
+        return (FrameIndex)((time - file_info.get_start_time()) / file_info.get_time_step_size());
     }
 
-    void retarget(const std::vector<CellID>& gidTarget, bool sortData = true);
+    void retarget(const std::vector<CellID>& gid_target, bool sort_data = true);
 
-    inline const Header& getHeader() const {
-        return fileInfo;
+    inline const Header& get_header() const {
+        return file_info;
     }
 
-    inline FrameDataCount getBufferSize_elements() const {
-        return offsets.getDataSize_elements();
+    inline FrameDataCount get_buffer_size_elements() const {
+        return offsets.get_data_size_elements();
     }
 
     // to select frame (similar use to iterators):
@@ -692,33 +688,33 @@ class FrameParser: protected ReadManager
     FrameParser& operator--(int);                  // decrement timestep
     FrameParser& operator+=(FrameDiff increment);  // increment timestep by scalar
     FrameParser& operator-=(FrameDiff decrement);  // decrement timestep by scalar
-    FrameParser& operator=(FrameIndex newTime);    // set timestep to scalar
+    FrameParser& operator=(FrameIndex new_time);   // set timestep to scalar
 
     // returns the current timestep:
-    inline FrameIndex getTimestep() const {
+    inline FrameIndex get_timestep() const {
         return timestep;
     }
 
-    inline bool hasMore() const {
-        return timestep < fileInfo.getNumberOfSteps();
+    inline bool has_more() const {
+        return timestep < file_info.get_number_of_steps();
     }
 
     // returns the current time that the current timestep represents.
-    Time getTime() const;
+    Time get_time() const;
 
-    void readFrameMapping(MappingItem* buffer);
-    void readFrameData(DataItem* buffer);  // reads data of next frame and advances to the frame
-                                           // after. Data is sorted by GID and segment num
+    void read_frame_mapping(MappingItem* buffer);
+    void read_frame_data(DataItem* buffer);  // reads data of next frame and advances to the frame
+                                             // after. Data is sorted by GID and segment num
 
-    /*getReferences()
+    /*get_references()
      * returns a vector of vectors of offsets that correspond to the relevant segments inside
      * the read buffer.
      * eg.
-     * getReferences()[12][31]; //will give the offset for segment 31 in cell 12
+     * get_references()[12][31]; //will give the offset for segment 31 in cell 12
      * if the segment has no comparments, it will return an offset of 0.
      */
-    inline CompartmentIndexing getReferences() const {
-        return org.makeOrderedOffsetReferences();
+    inline CompartmentIndexing get_references() const {
+        return org.make_ordered_offset_references();
     }
 
     /*getCompartmentCounts()
@@ -726,9 +722,9 @@ class FrameParser: protected ReadManager
      * but instead of containing the offsets for each segment,
      * it contains the amount of compartmetns of the corresponding segment.
      */
-    inline CompartmentCounts getCompartmentCounts() const {
-        return org.makeOrderedSegSizes();
+    inline CompartmentCounts get_compartment_counts() const {
+        return org.make_ordered_seg_sizes();
     }
 };
-}  // namespace bbpReader
-#endif
+}  // namespace binary_reader
+}  // namespace bbp

@@ -8,11 +8,11 @@
 #include <mpi.h>
 #endif
 
-#include "binary_reader/ReadManager.h"
+#include "binary_reader/binary_reader.h"
 #include <bbp/sonata/reports.h>
 #include <utils/logger.h>
 
-using namespace bbpReader;
+using namespace bbp::binary_reader;
 
 static void show_usage(std::string name) {
     std::cerr << "Usage: " << name << " <report_filename> <report_type> [population_name]\n"
@@ -62,33 +62,33 @@ int main(int argc, char* argv[]) {
     }
 
     FrameParser frame_parser(file_name);
-    Header header = frame_parser.getHeader();
+    Header header = frame_parser.get_header();
 
     std::string report_name = file_name.substr(file_name.find_last_of("/\\") + 1);
 
     // Get header information in order to create the report
-    double tstart = header.getStartTime();
-    double tstop = header.getEndTime();
-    double dt = header.getTimeStepSize();
+    double tstart = header.get_start_time();
+    double tstop = header.get_end_time();
+    double dt = header.get_time_step_size();
     logger->info("Report info: tstart = '{}', tstop = '{}', dt = '{}'", tstart, tstop, dt);
     sonata_create_report(report_name.data(), tstart, tstop, dt, "mV", "compartment");
 
     // Get Cell information to create node/element structure
     // TODO: check if it could be done without getting the FrameParser per gid
     ReadManager file(file_name);
-    FrameInfo cells = file.retrieveAllCellInfo();
+    FrameInfo cells = file.retrieve_all_cell_info();
     std::vector<CellID> node_ids(1);
     for (FrameInfo::const_iterator it = cells.begin(); it != cells.end(); ++it) {
-        node_ids[0] = it->getCellNum();
-        sonata_add_node(report_name.data(), population_name.data(), 0, it->getCellNum());
+        node_ids[0] = it->get_cell_num();
+        sonata_add_node(report_name.data(), population_name.data(), 0, it->get_cell_num());
 
         if (report_type == "--soma") {
             sonata_add_element(report_name.data(), population_name.data(), node_ids[0], 0, nullptr);
         } else {  // --compartment
             FrameParser frame_parser_gid(file_name, node_ids);
-            int num_element_ids = frame_parser_gid.getBufferSize_elements();
+            int num_element_ids = frame_parser_gid.get_buffer_size_elements();
             DataItem* element_ids_buffer = new DataItem[num_element_ids];
-            frame_parser_gid.readFrameMapping(element_ids_buffer);
+            frame_parser_gid.read_frame_mapping(element_ids_buffer);
 
             std::vector<uint32_t> element_ids(element_ids_buffer,
                                               element_ids_buffer + num_element_ids);
@@ -101,12 +101,12 @@ int main(int argc, char* argv[]) {
     // Generate the initial structure
     sonata_prepare_datasets();
 
-    uint64_t element_ids_per_frame = frame_parser.getBufferSize_elements();
+    uint64_t element_ids_per_frame = frame_parser.get_buffer_size_elements();
     DataItem* element_ids_buffer = new DataItem[element_ids_per_frame];
     uint32_t timestep = 0;
     // Write the timestep frames
-    while (frame_parser.hasMore()) {
-        frame_parser.readFrameData(element_ids_buffer);
+    while (frame_parser.has_more()) {
+        frame_parser.read_frame_data(element_ids_buffer);
         sonata_write_buffered_data(report_name.data(),
                                    element_ids_buffer,
                                    element_ids_per_frame,
