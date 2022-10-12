@@ -14,7 +14,7 @@
 
 using namespace bbp::binary_reader;
 
-static void show_usage(std::string name) {
+static void show_usage(const std::string& name) {
     std::cerr << "Usage: " << name << " <report_filename> <report_type> [population_name]\n"
               << "Options:\n"
               << "\t-h,--help\t\tShow this help message\n"
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
     FrameParser frame_parser(file_name);
     Header header = frame_parser.get_header();
 
-    std::string report_name = file_name.substr(file_name.find_last_of("/\\") + 1);
+    const std::string report_name = file_name.substr(file_name.find_last_of("/\\") + 1);
 
     // Get header information in order to create the report
     double tstart = header.get_start_time();
@@ -87,11 +87,9 @@ int main(int argc, char* argv[]) {
         } else {  // --compartment
             FrameParser frame_parser_gid(file_name, node_ids);
             int num_element_ids = frame_parser_gid.get_buffer_size_elements();
-            DataItem* element_ids_buffer = new DataItem[num_element_ids];
-            frame_parser_gid.read_frame_mapping(element_ids_buffer);
+            std::vector<DataItem> element_ids(num_element_ids);
+            frame_parser_gid.read_frame_mapping(element_ids.data());
 
-            std::vector<uint32_t> element_ids(element_ids_buffer,
-                                              element_ids_buffer + num_element_ids);
             for (auto& element : element_ids) {
                 sonata_add_element(
                     report_name.data(), population_name.data(), node_ids[0], element, nullptr);
@@ -102,13 +100,13 @@ int main(int argc, char* argv[]) {
     sonata_prepare_datasets();
 
     uint64_t element_ids_per_frame = frame_parser.get_buffer_size_elements();
-    DataItem* element_ids_buffer = new DataItem[element_ids_per_frame];
+    std::vector<DataItem> element_ids_buffer(element_ids_per_frame);
     uint32_t timestep = 0;
     // Write the timestep frames
     while (frame_parser.has_more()) {
-        frame_parser.read_frame_data(element_ids_buffer);
+        frame_parser.read_frame_data(element_ids_buffer.data());
         sonata_write_buffered_data(report_name.data(),
-                                   element_ids_buffer,
+                                   element_ids_buffer.data(),
                                    element_ids_per_frame,
                                    1);  // Number of frames to write
         if (timestep % 1000 == 0 && timestep > 0) {

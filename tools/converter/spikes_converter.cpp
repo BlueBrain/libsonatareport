@@ -10,7 +10,7 @@
 #include <bbp/sonata/reports.h>
 #include <utils/logger.h>
 
-static void show_usage(std::string name) {
+static void show_usage(const std::string& name) {
     std::cerr << "Usage: " << name << " <spike_filename> [population_name]\n"
               << "Options:\n"
               << "\t-h,--help\t\tShow this help message\n"
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Create a spike file
-    std::string report_name = file_name.substr(file_name.find_last_of("/\\") + 1);
+    const std::string report_name = file_name.substr(file_name.find_last_of("/\\") + 1);
     sonata_create_spikefile(".", report_name.data());
 
     uint64_t population_offset = 0;
