@@ -333,9 +333,9 @@ void SonataData::write_data() {
 
             if (print)
             {
-                fprintf(stderr, "CORENEURON_CHAPUZA_SONATA_1\n");
+                fprintf(stderr, "CORENEURON_CHAPUZA_SONATA_1 / current_step_=%u remaining_steps_=%u\n", current_step_, remaining_steps_);
                 fflush(stderr);
-                print = false;
+                // print = false;
             }
         }
         hdf5_writer_->write_2D(report_buffer_, current_step_, total_elements_);

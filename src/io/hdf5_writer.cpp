@@ -167,23 +167,6 @@ void HDF5Writer::write_2D(const std::vector<float>& buffer,
                 if (getenv("CORENEURON_CHAPUZA_SONATA_4") != NULL) {
                     H5Pclose(collective_list);
                 }
-
-                ssize_t norphans;
-                norphans = H5Fget_obj_count(file_, H5F_OBJ_ALL);
-                if (norphans > 1) { /* expect 1 for the file we have not closed */
-                    int i;
-                    H5O_info_t info;
-                    char name[64];
-                    hid_t * objects = (hid_t *)malloc(norphans * sizeof(hid_t));
-                    H5Fget_obj_ids(file_, H5F_OBJ_ALL, -1, objects);
-                    for (i=0; i<norphans; i++) {
-                        H5Oget_info(objects[i], &info);
-                        H5Iget_name(objects[i], name, 64);
-                        printf("%d of %zd things still open: %d with name %s of type %d",
-                            i, norphans, objects[i], name, info.type);
-                    }
-                    free(objects);
-                }
             }
         }
 

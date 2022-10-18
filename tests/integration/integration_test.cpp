@@ -133,7 +133,7 @@ void print_data(std::vector<Neuron>& neurons) {
 }
 
 int main() {
-    logger->set_level(spdlog::level::debug);
+    // logger->set_level(spdlog::level::debug);
     int global_rank = 0;
     int global_size = 1;
 #ifdef SONATA_REPORT_HAVE_MPI
@@ -142,12 +142,12 @@ int main() {
     MPI_Comm_size(MPI_COMM_WORLD, &global_size);
 #endif
     if (global_rank == 0) {
-        logger->info("Starting...");
+        logger->debug("Starting...");
     }
 
-    const double dt = 0.1;
+    const double dt = 0.05;
     const double tstart = 0.0;
-    const double tstop = 0.3;
+    const double tstop = 1000000;
 
     std::vector<Neuron> element_neurons;
     std::vector<Neuron> soma_neurons;
@@ -170,7 +170,7 @@ int main() {
     std::vector<int> int_single_nodeids(begin(single_nodeids), end(single_nodeids));
 
     if (global_rank == 0) {
-        logger->info("Initializing data structures (reports, nodes, elements)");
+        logger->debug("Initializing data structures (reports, nodes, elements)");
     }
     const char* element_report = "compartment_report";
     const char* soma_report = "soma_report";
@@ -182,7 +182,7 @@ int main() {
     if (global_rank == 0) {
         init(single_report, tstart, tstop, dt, single_neurons, "soma", units);
     }
-    sonata_set_max_buffer_size_hint(20);
+    sonata_set_max_buffer_size_hint(1);
     sonata_set_atomic_step(dt);
 
     sonata_setup_communicators();
@@ -190,7 +190,7 @@ int main() {
     sonata_time_data();
 
     if (global_rank == 0) {
-        logger->info("Starting the simulation!");
+        logger->debug("Starting the simulation!");
     }
     // Calculate number of steps of the simulation
     double sim_steps = (tstop - tstart) / dt;
@@ -198,14 +198,14 @@ int main() {
     double t = 0.0;
     for (int i = 0; i < num_steps; i++) {
         if (global_rank == 0) {
-            logger->info("Recording data for step = {}", i);
+            logger->debug("Recording data for step = {}", i);
         }
         sonata_record_node_data(i, element_nodeids.size(), &int_element_nodeids[0], element_report);
         sonata_record_node_data(i, soma_nodeids.size(), &int_soma_nodeids[0], soma_report);
         sonata_record_node_data(i, single_nodeids.size(), &int_single_nodeids[0], single_report);
         // Also works
         // sonata_rec(i);
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+        // std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
         // Update timestep on reportinglib
         sonata_check_and_flush(t);
@@ -238,7 +238,7 @@ int main() {
     sonata_close_spikefile();
 
     if (global_rank == 0) {
-        logger->info("Finalizing...");
+        logger->debug("Finalizing...");
     }
 
 #ifdef SONATA_REPORT_HAVE_MPI
