@@ -325,7 +325,21 @@ void SonataData::write_data() {
                       report_name_,
                       population_name_);
     }
-    hdf5_writer_->write_2D(report_buffer_, current_step_, total_elements_);
+    if (getenv("CORENEURON_CHAPUZA_SONATA_1") != NULL)
+    {
+        if (SonataReport::rank_ == 0)
+        {
+            static bool print = true;
+
+            if (print)
+            {
+                fprintf(stderr, "CORENEURON_CHAPUZA_SONATA_1\n");
+                fflush(stderr);
+                print = false;
+            }
+        }
+        hdf5_writer_->write_2D(report_buffer_, current_step_, total_elements_);
+    }
     remaining_steps_ -= current_step_;
     if (SonataReport::rank_ == 0) {
         logger->debug("\t-Steps written: {}", current_step_);

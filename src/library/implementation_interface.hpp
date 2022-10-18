@@ -232,9 +232,9 @@ struct ParallelImplementation {
         MPI_Info info = MPI_INFO_NULL;
 
         // Set proper MPI-IO hints for better IME support
-        if (path_info.first == FSTYPE_IME) {
-            IMEUtil::set_mpi_hints(info);
-        }
+        // if (path_info.first == FSTYPE_IME) {
+        //     IMEUtil::set_mpi_hints(info);
+        // }
 
         // Set the MPI Info object with the hints
         hid_t plist_id = H5Pcreate(H5P_FILE_ACCESS);

@@ -96,7 +96,8 @@ void HDF5Writer::configure_dataset(const std::string& dataset_name,
                          H5P_DEFAULT,
                          H5P_DEFAULT,
                          H5P_DEFAULT);
-
+    
+    // filespace_ = H5Dget_space(dataset_);
     // Caculate the offset of each rank
     offset_[1] = Implementation::get_offset(report_name_, total_elements);
     H5Sclose(data_space);
@@ -113,9 +114,78 @@ void HDF5Writer::write_2D(const std::vector<float>& buffer,
         hid_t memspace = H5Screate_simple(2, count.data(), nullptr);
         hid_t filespace = H5Dget_space(dataset_);
 
-        H5Sselect_hyperslab(
-            filespace, H5S_SELECT_SET, offset_.data(), nullptr, count.data(), nullptr);
-        H5Dwrite(dataset_, H5T_NATIVE_FLOAT, memspace, filespace, collective_list_, buffer.data());
+        if (getenv("CORENEURON_CHAPUZA_SONATA_2") != NULL)
+        {
+            if (SonataReport::rank_ == 0)
+            {
+                static bool print = true;
+
+                if (print)
+                {
+                    fprintf(stderr, "CORENEURON_CHAPUZA_SONATA_2\n");
+                    fflush(stderr);
+                    print = false;
+                }
+            }
+            H5Sselect_hyperslab(
+                filespace, H5S_SELECT_SET, offset_.data(), nullptr, count.data(), nullptr);
+            
+            if (getenv("CORENEURON_CHAPUZA_SONATA_3") != NULL)
+            {
+                hid_t collective_list = H5P_DEFAULT;
+                if (SonataReport::rank_ == 0)
+                {
+                    static bool print = true;
+
+                    if (print)
+                    {
+                        fprintf(stderr, "CORENEURON_CHAPUZA_SONATA_3\n");
+                        fflush(stderr);
+                        print = false;
+                    }
+                }
+
+                if (getenv("CORENEURON_CHAPUZA_SONATA_4") != NULL) {
+                    if (SonataReport::rank_ == 0)
+                    {
+                        static bool print = true;
+
+                        if (print)
+                        {
+                            fprintf(stderr, "CORENEURON_CHAPUZA_SONATA_4\n");
+                            fflush(stderr);
+                            print = false;
+                        }
+                    }
+
+                    collective_list = H5Pcreate(H5P_DATASET_XFER);
+                    H5Pset_dxpl_mpio(collective_list, H5FD_MPIO_COLLECTIVE);
+                }
+
+                H5Dwrite(dataset_, H5T_NATIVE_FLOAT, memspace, filespace, collective_list, buffer.data()); // H5P_DEFAULT
+
+                if (getenv("CORENEURON_CHAPUZA_SONATA_4") != NULL) {
+                    H5Pclose(collective_list);
+                }
+
+                ssize_t norphans;
+                norphans = H5Fget_obj_count(file_, H5F_OBJ_ALL);
+                if (norphans > 1) { /* expect 1 for the file we have not closed */
+                    int i;
+                    H5O_info_t info;
+                    char name[64];
+                    hid_t * objects = (hid_t *)malloc(norphans * sizeof(hid_t));
+                    H5Fget_obj_ids(file_, H5F_OBJ_ALL, -1, objects);
+                    for (i=0; i<norphans; i++) {
+                        H5Oget_info(objects[i], &info);
+                        H5Iget_name(objects[i], name, 64);
+                        printf("%d of %zd things still open: %d with name %s of type %d",
+                            i, norphans, objects[i], name, info.type);
+                    }
+                    free(objects);
+                }
+            }
+        }
 
         H5Sclose(filespace);
         H5Sclose(memspace);

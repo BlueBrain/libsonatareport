@@ -4,6 +4,10 @@
 #include <hdf5.h>
 #include <vector>
 
+#ifdef SONATA_REPORT_HAVE_MPI
+#include <mpi.h>
+#endif
+
 #include "h5typemap.hpp"
 
 namespace bbp {
