@@ -151,7 +151,6 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
     // Increase steps recorded when all nodes from specific rank has been already recorded
     if (nodes_recorded_.size() == nodes_->size()) {
         steps_recorded_++;
-        check_and_write(step * SonataReport::atomic_step_);
     }
 }
 
@@ -205,8 +204,12 @@ void SonataData::check_and_write(double timestep) {
     last_step_recorded_ += reporting_period_ * steps_recorded_;
     nodes_recorded_.clear();
 
-    // Write when buffer is full or we finish all remaining recordings
-    if (current_step_ == steps_to_write_ || current_step_ == remaining_steps_) {
+    bool write_before_spike_exchange = (current_step_ + SonataReport::min_steps_to_record_) >
+                                       steps_to_write_;
+    // Write when buffer is full, if it will be full before next spike_exchange or when we finish
+    // all remaining recordings
+    if (current_step_ == steps_to_write_ || current_step_ == remaining_steps_ ||
+        write_before_spike_exchange) {
         if (SonataReport::rank_ == 0) {
             logger->trace(
                 "Writing to file {}! population {} steps_to_write={}, current_step={}, "
