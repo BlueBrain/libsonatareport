@@ -40,7 +40,7 @@ set_target_properties(sonata_report
 )
 target_link_libraries(sonata_report
     PRIVATE spdlog::spdlog_header_only
-    PRIVATE ${MPI_CXX_LIBRARIES}
+    PRIVATE ${MPI_C_LIBRARIES}
     PRIVATE ${HDF5_C_LIBRARIES}
 )
 

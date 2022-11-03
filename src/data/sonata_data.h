@@ -73,7 +73,8 @@ class SonataData
     void write_spike_populations();
     void add_population(std::unique_ptr<Population>&& population);
 
-    void write_data();
+    void write_data(const std::vector<float>& buffered_data, uint32_t steps_to_write);
+    void flush();
     void close();
 
     bool is_due_to_report(double step) const noexcept;

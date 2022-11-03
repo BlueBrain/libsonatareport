@@ -113,10 +113,11 @@ void init(const char* report_name,
     }
 }
 
-void change_data(std::vector<Neuron>& neurons) {
+void change_data(std::vector<Neuron>& neurons, std::vector<float>& buffered_data) {
     // Increment in 1 per timestep every voltage
     for (auto& neuron : neurons) {
         for (auto& element : neuron.voltages) {
+            buffered_data.push_back(element);
             element++;
         }
     }
@@ -176,6 +177,9 @@ int main() {
     const char* soma_report = "soma_report";
     const char* single_report = "single_report";
     const char* units = "mV";
+    std::vector<float> element_buffered_data = {};
+    std::vector<float> soma_buffered_data = {};
+    std::vector<float> single_neurons_buffered_data = {};
 
     init(element_report, tstart, tstop, dt, element_neurons, "compartment", units);
     init(soma_report, tstart, tstop, dt, soma_neurons, "soma", units);
@@ -211,11 +215,32 @@ int main() {
         sonata_check_and_flush(t);
         t += dt;
         // Change data every timestep
-        change_data(element_neurons);
-        change_data(soma_neurons);
-        change_data(single_neurons);
+        change_data(element_neurons, element_buffered_data);
+        change_data(soma_neurons, soma_buffered_data);
+        change_data(single_neurons, single_neurons_buffered_data);
     }
     sonata_flush(t);
+    sonata_clear();
+
+    // Write pre-buffered data (GPU usecase)
+    if (global_rank == 0) {
+        logger->info("GPU usecase: Writting prebuffered steps");
+    }
+    const char* buffered_soma_report = "buffered_soma_report";
+
+    init(buffered_soma_report,
+         tstart,
+         tstop,
+         dt,
+         soma_neurons,
+         "soma",
+         units);
+
+    sonata_setup_communicators();
+    sonata_prepare_datasets();
+    sonata_write_buffered_data(buffered_soma_report, soma_buffered_data.data(), soma_buffered_data.size(), num_steps);
+    sonata_clear();
+
     const std::string output_dir = ".";
 
     // Create a spike file

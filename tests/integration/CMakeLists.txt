@@ -15,7 +15,7 @@ target_compile_options(reports_integration_test
 target_link_libraries(reports_integration_test
     PUBLIC sonata_report
     PRIVATE spdlog::spdlog_header_only
-    PRIVATE ${MPI_CXX_LIBRARIES}
+    PRIVATE ${MPI_C_LIBRARIES}
 )
 
 add_test(NAME reports_integration_test

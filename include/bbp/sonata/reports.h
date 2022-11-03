@@ -120,6 +120,15 @@ int sonata_record_node_data(double step,
 int sonata_record_data(double step);
 
 /**
+ * \brief Write steps_to_write steps given a pre-buffered data
+ * \return -3 if the Sonata report doesn't exist, -1 if the report name doesn't exist, 0 otherwise
+ */
+int sonata_write_buffered_data(const char* report_name,
+                               const float* buffered_data,
+                               size_t buffered_data_size,
+                               uint32_t steps_to_write);
+
+/**
  * \brief Check status of the recordings/buffers and flush if necessary
  * \return 0
  */

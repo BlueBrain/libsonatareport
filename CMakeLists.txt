@@ -43,6 +43,8 @@ option(SONATA_REPORT_ENABLE_SUBMODULES "Use Git submodules for header-only depen
 option(SONATA_REPORT_ENABLE_WARNING_AS_ERROR "Compile C++ with warnings as errors" OFF)
 option(SONATA_REPORT_ENABLE_MPI "Enable MPI-based execution" ON)
 option(SONATA_REPORT_ENABLE_TEST "Enable tests" ON)
+option(SONATA_REPORT_ENABLE_CONVERTER "Enable binary report converter" OFF)
+
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/CMake)
 set(CMAKE_SKIP_INSTALL_ALL_DEPENDENCY true)
@@ -95,7 +97,7 @@ if(SONATA_REPORT_ENABLE_MPI)
     else()
         if (HDF5_FOUND)
             # Avoid NOTFOUND error
-            set(MPI_CXX_LIBRARIES "")
+            set(MPI_C_LIBRARIES "")
             message(STATUS "HDF5 found, Using reporting serial implementation")
         else()
             message(FATAL_ERROR "No MPI or HDF5 found")
@@ -156,4 +158,11 @@ if(SONATA_REPORT_ENABLE_TEST)
             DEPENDENCIES reports_unit_tests reports_integration_test
         )
     endif()
+endif()
+
+# =============================================================================
+# Converter of binary to SONATA reports
+# =============================================================================
+if(SONATA_REPORT_ENABLE_CONVERTER)
+    add_subdirectory(tools/converter)
 endif()

@@ -1,2 +1,5 @@
 add_subdirectory(unit)
 add_subdirectory(integration)
+if(SONATA_REPORT_ENABLE_CONVERTER)
+    add_subdirectory(converter)
+endif()
