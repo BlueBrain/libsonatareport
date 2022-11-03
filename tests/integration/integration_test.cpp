@@ -228,17 +228,14 @@ int main() {
     }
     const char* buffered_soma_report = "buffered_soma_report";
 
-    init(buffered_soma_report,
-         tstart,
-         tstop,
-         dt,
-         soma_neurons,
-         "soma",
-         units);
+    init(buffered_soma_report, tstart, tstop, dt, soma_neurons, "soma", units);
 
     sonata_setup_communicators();
     sonata_prepare_datasets();
-    sonata_write_buffered_data(buffered_soma_report, soma_buffered_data.data(), soma_buffered_data.size(), num_steps);
+    sonata_write_buffered_data(buffered_soma_report,
+                               soma_buffered_data.data(),
+                               soma_buffered_data.size(),
+                               num_steps);
     sonata_clear();
 
     const std::string output_dir = ".";
