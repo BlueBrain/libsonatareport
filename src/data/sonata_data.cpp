@@ -151,7 +151,9 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
     // Increase steps recorded when all nodes from specific rank has been already recorded
     if (nodes_recorded_.size() == nodes_->size()) {
         steps_recorded_++;
-        check_and_write(step * SonataReport::atomic_step_);
+        if (current_step_ + steps_recorded_ == steps_to_write_) {
+            check_and_write(step * SonataReport::atomic_step_);
+        }
     }
 }
 
@@ -205,8 +207,12 @@ void SonataData::check_and_write(double timestep) {
     last_step_recorded_ += reporting_period_ * steps_recorded_;
     nodes_recorded_.clear();
 
-    // Write when buffer is full or we finish all remaining recordings
-    if (current_step_ == steps_to_write_ || current_step_ == remaining_steps_) {
+    bool write_before_spike_exchange = (current_step_ + SonataReport::min_steps_to_record_) >
+                                       steps_to_write_;
+    // Write when buffer is full, if it will be full before next spike_exchange or when we finish
+    // all remaining recordings
+    if (current_step_ == steps_to_write_ || current_step_ == remaining_steps_ ||
+        write_before_spike_exchange) {
         if (SonataReport::rank_ == 0) {
             logger->trace(
                 "Writing to file {}! population {} steps_to_write={}, current_step={}, "
@@ -337,22 +343,22 @@ void SonataData::write_data(const std::vector<float>& buffered_data, uint32_t st
     if (remaining_steps_ <= 0) {  // Nothing left to write
         return;
     }
-    if (steps_to_write  >= remaining_steps_) {  // Avoid writing out of bounds
-        steps_to_write  = remaining_steps_;
+    if (steps_to_write >= remaining_steps_) {  // Avoid writing out of bounds
+        steps_to_write = remaining_steps_;
     }
     if (SonataReport::rank_ == 0) {
         logger->debug("WRITING timestep data to file {} in population {}",
                       report_name_,
                       population_name_);
     }
-    hdf5_writer_->write_2D(buffered_data, steps_to_write , total_elements_);
-    remaining_steps_ -= steps_to_write ;
+    hdf5_writer_->write_2D(buffered_data, steps_to_write, total_elements_);
+    remaining_steps_ -= steps_to_write;
     if (SonataReport::rank_ == 0) {
-        logger->debug("\t-Steps written: {}", steps_to_write );
+        logger->debug("\t-Steps written: {}", steps_to_write);
         logger->debug("\t-Remaining steps: {}", remaining_steps_);
     }
     last_position_ = 0;
-    steps_to_write  = 0;
+    steps_to_write = 0;
 }
 
 void SonataData::flush() {
