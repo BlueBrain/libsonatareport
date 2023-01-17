@@ -16,12 +16,13 @@ class Node
     void fill_data(std::vector<float>::iterator it);
     void refresh_pointers(std::function<double*(double*)> refresh_function);
     virtual void add_element(double* element_value, uint32_t element_id);
+    virtual void add_element(std::function<double()> element_value, uint32_t element_id);
 
     uint64_t get_node_id() const noexcept {
         return node_id_;
     }
     virtual size_t get_num_elements() const noexcept {
-        return elements_.size();
+        return element_ids_.size();
     }
     const std::vector<uint32_t>& get_element_ids() const noexcept {
         return element_ids_;
@@ -33,6 +34,7 @@ class Node
   protected:
     std::vector<uint32_t> element_ids_;
     std::vector<double*> elements_;
+    std::vector<std::function<double()>> element_handles_;
 };
 
 using nodes_t = std::map<uint64_t, std::shared_ptr<Node>>;
