@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unordered_set>
 
 #include "../utils/logger.h"
 #include "element_report.h"
@@ -18,6 +19,8 @@ MPI_Comm SonataReport::has_nodes_ = MPI_COMM_WORLD;
 SonataReport::communicators_t SonataReport::communicators_;
 #endif
 
+std::unordered_set<std::string> report_types{"compartment", "summation", "synapse", "lfp"};
+
 void SonataReport::clear() {
     for (auto& kv : reports_) {
         logger->trace("Deleting report: {} from rank {}", kv.first, SonataReport::rank_);
@@ -35,7 +38,7 @@ std::shared_ptr<Report> SonataReport::create_report(const std::string& name,
                                                     double tend,
                                                     double dt,
                                                     const std::string& units) {
-    if (kind == "compartment" || kind == "synapse" || kind == "summation") {
+    if (report_types.find(kind) != report_types.end()) {
         reports_.emplace(name, std::make_shared<ElementReport>(name, tstart, tend, dt, units));
     } else if (kind == "soma") {
         reports_.emplace(name, std::make_shared<SomaReport>(name, tstart, tend, dt, units));
