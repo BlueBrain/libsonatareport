@@ -8,7 +8,7 @@ jobs:
         runs-on: ${{ matrix.os }}
         strategy:
             matrix:
-                os: [ ubuntu-18.04 ]
+                os: [ ubuntu-20.04 ]
                 config:
                   - {cmake_option: "-DSONATA_REPORT_ENABLE_SUBMODULES=ON -DSONATA_REPORT_ENABLE_CONVERTER=ON", mpi: ON}
                   - {cmake_option: "-DSONATA_REPORT_ENABLE_SUBMODULES=ON -DSONATA_REPORT_ENABLE_MPI=OFF -DSONATA_REPORT_ENABLE_CONVERTER=ON", mpi: OFF}
