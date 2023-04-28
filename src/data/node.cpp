@@ -45,7 +45,20 @@ void Node::fill_data(std::vector<float>::iterator it) {
 }
 
 void Node::refresh_pointers(std::function<double*(double*)> refresh_function) {
-    std::transform(elements_.begin(), elements_.end(), elements_.begin(), refresh_function);
+    if (!elements_.empty()) {
+        std::transform(elements_.begin(), elements_.end(), elements_.begin(), refresh_function);
+    } else if (!element_handles_.empty()) {
+        std::transform(element_handles_.begin(),
+                       element_handles_.end(),
+                       element_handles_.begin(),
+                       [&refresh_function](auto const& elem) -> std::function<double()> {
+                           return [elem, refresh_function]() -> double {
+                               double value = elem();
+                               double* refreshed_value = refresh_function(&value);
+                               return *refreshed_value;
+                           };
+                       });
+    }
 }
 
 }  // namespace sonata
