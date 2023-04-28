@@ -10,6 +10,7 @@ class SomaNode: public Node
     SomaNode(uint64_t node_id);
 
     void add_element(double* element_value, uint32_t element_id) override;
+    void add_element(std::function<double()> element_value, uint32_t element_id) override;
     size_t get_num_elements() const noexcept override {
         return elements_.empty() ? 0 : 1;
     };

@@ -44,18 +44,20 @@ int sonata_add_node(const char* report_name,
     return 0;
 }
 
-int sonata_add_element(const char* report_name,
-                       const char* population_name,
-                       uint64_t node_id,
-                       uint32_t element_id,
-                       double* voltage) {
+namespace {
+template <typename T>
+int sonata_add_element_impl(const char* report_name,
+                            const char* population_name,
+                            uint64_t node_id,
+                            uint32_t element_id,
+                            T&& voltage) {
     if (!sonata_report.report_exists(report_name)) {
         return -2;
     }
     try {
         auto report = sonata_report.get_report(report_name);
         auto node = report->get_node(population_name, node_id);
-        node->add_element(voltage, element_id);
+        node->add_element(std::forward<T>(voltage), element_id);
     } catch (const std::out_of_range& err) {
         logger->error(err.what());
         return -3;
@@ -64,6 +66,24 @@ int sonata_add_element(const char* report_name,
         return -1;
     }
     return 0;
+}
+}  // namespace
+
+int sonata_add_element(const char* report_name,
+                       const char* population_name,
+                       uint64_t node_id,
+                       uint32_t element_id,
+                       double* voltage) {
+    return sonata_add_element_impl(report_name, population_name, node_id, element_id, voltage);
+}
+
+int sonata_add_element_handle(const char* report_name,
+                              const char* population_name,
+                              uint64_t node_id,
+                              uint32_t element_id,
+                              std::function<double()> element_value) {
+    return sonata_add_element_impl(
+        report_name, population_name, node_id, element_id, std::move(element_value));
 }
 
 void sonata_setup_communicators() {

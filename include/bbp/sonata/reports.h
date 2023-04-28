@@ -192,4 +192,21 @@ char* sonata_restore(uint64_t node_id, const int* piece_count, const int* length
 
 #if defined(__cplusplus)
 }
+
+#include <functional>
+
+/**
+ * \brief Add an element value to an existing node on a report
+ *
+ * C++-only analogue of sonata_add_element that takes a generic handle to element_value instead of a
+ * raw pointer.
+ *
+ * \return 0 if operator succeeded, -2 if the report doesn't exist, -3 if the specified node
+ * doesn't exist, -1 for other errors.
+ */
+int sonata_add_element_handle(const char* report_name,
+                              const char* population_name,
+                              uint64_t node_id,
+                              uint32_t element_id,
+                              std::function<double()> element_value);
 #endif
