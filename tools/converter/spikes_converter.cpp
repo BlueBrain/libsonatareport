@@ -51,21 +51,21 @@ int main(int argc, char* argv[]) {
         return -2;
     }
 
-    // remove /scatter
+    // remove /scatter and # commented lines
     std::string scatter;
     getline(infile, scatter);
-    if (scatter != "/scatter") {
+    if (scatter != "/scatter" && scatter[0] != '#') {
         infile.seekg(0, std::ios::beg);
     }
 
     std::vector<double> spike_timestamps;
     std::vector<int> spike_node_ids;
     double timestamp;
-    int node_id;
-
+    // Some files could have node_ids as double
+    double node_id;
     while (infile >> timestamp >> node_id) {
         spike_timestamps.push_back(timestamp);
-        spike_node_ids.push_back(node_id);
+        spike_node_ids.push_back(static_cast<int>(node_id));
     }
 
     // Create a spike file

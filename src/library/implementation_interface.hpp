@@ -315,6 +315,9 @@ struct ParallelImplementation {
         // first find number of spikes in each time window
         for (const auto& st : spikevec_time) {
             int idx = (int) (st - min_time) / bin_t;
+            if (idx >= numprocs) {
+                idx = numprocs - 1;
+            }
             snd_cnts[idx]++;
         }
 
