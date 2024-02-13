@@ -13,9 +13,8 @@ https://github.com/AllenInstitute/sonata/blob/master/docs/SONATA_DEVELOPER_GUIDE
 ```shell
 git clone git@github.com:BlueBrain/libsonatareport.git --recursive
 cd libsonatareport
-mkdir build && cd build
-cmake  -DCMAKE_BUILD_TYPE=Release  -DSONATA_REPORT_ENABLE_SUBMODULES=ON ..
-make -j
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DSONATA_REPORT_ENABLE_SUBMODULES=ON -GNinja
+cmake --build build
 ```
 
 # Usage
