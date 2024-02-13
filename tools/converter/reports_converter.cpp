@@ -70,8 +70,9 @@ int main(int argc, char* argv[]) {
     double tstart = header.get_start_time();
     double tstop = header.get_end_time();
     double dt = header.get_time_step_size();
+    std::string data_unit = header.get_data_unit();
     logger->info("Report info: tstart = '{}', tstop = '{}', dt = '{}'", tstart, tstop, dt);
-    sonata_create_report(report_name.data(), tstart, tstop, dt, "mV", "compartment");
+    sonata_create_report(report_name.data(), tstart, tstop, dt, data_unit.data(), "compartment");
 
     // Get Cell information to create node/element structure
     // TODO: check if it could be done without getting the FrameParser per gid
