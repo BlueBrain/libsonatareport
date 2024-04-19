@@ -17,6 +17,8 @@ class Node
     void refresh_pointers(std::function<double*(double*)> refresh_function);
     virtual void add_element(double* element_value, uint32_t element_id);
     virtual void add_element(std::function<double()> element_value, uint32_t element_id);
+    virtual void update_elements(std::vector<uint32_t> element_ids,
+                                 std::vector<double*> element_values);
 
     uint64_t get_node_id() const noexcept {
         return node_id_;

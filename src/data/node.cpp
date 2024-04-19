@@ -30,6 +30,29 @@ void Node::add_element(std::function<double()> element_value, uint32_t element_i
     element_ids_.push_back(element_id);
 }
 
+void Node::update_elements(std::vector<uint32_t> element_ids, std::vector<double*> element_values) {
+    if (element_ids.size() != element_values.size()) {
+        throw std::runtime_error(
+            "bbp::sonata::Node::update_elements: element_ids and element_values must have the same "
+            "size");
+    } else if (!elements_.empty()) {
+        if (element_ids.size() != element_ids_.size()) {
+            throw std::runtime_error(
+                "bbp::sonata::Node::update_elements: element_ids and internal element_ids_ must "
+                "have the same size");
+        }
+        for (size_t i = 0; i < element_ids.size(); ++i) {
+            if (element_ids[i] != element_ids_[i]) {
+                throw std::runtime_error(
+                    "bbp::sonata::Node::update_elements: element_ids must be in the same order as "
+                    "internal element_ids_");
+            }
+            elements_[i] = element_values[i];
+        }
+    }
+}
+
+
 void Node::fill_data(std::vector<float>::iterator it) {
     assert(elements_.empty() || element_handles_.empty());
     if (!elements_.empty()) {

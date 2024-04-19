@@ -52,6 +52,48 @@ SCENARIO("Test Node class", "[Node]") {
                 node.fill_data(result.begin());
                 REQUIRE(result == compare);
             }
+            THEN("update_elements with different sizes in elements should fail") {
+                // Sizes of element_ids and element_values differ
+                std::vector<uint32_t> element_ids = {0, 1, 2, 3, 4};
+                std::vector<double> new_elements = {100, 111, 122};
+                std::vector<double*> element_values;
+                for (auto& element : new_elements) {
+                    element_values.push_back(&element);
+                }
+                REQUIRE_THROWS(node.update_elements(element_ids, element_values));
+            }
+            THEN("update_elements with wrong size should fail") {
+                // Initial node has 5 elements
+                std::vector<uint32_t> element_ids = {0, 1, 2};
+                std::vector<double> new_elements = {100, 111, 122};
+                std::vector<double*> element_values;
+                for (auto& element : new_elements) {
+                    element_values.push_back(&element);
+                }
+                REQUIRE_THROWS(node.update_elements(element_ids, element_values));
+            }
+            THEN("update_elements with different element_ids should fail") {
+                // Initial node has {0,1,2,3,4} element_ids
+                std::vector<uint32_t> element_ids = {0, 1, 2, 3, 5};
+                std::vector<double> new_elements = {100, 111, 122, 133, 144};
+                std::vector<double*> element_values;
+                for (auto& element : new_elements) {
+                    element_values.push_back(&element);
+                }
+                REQUIRE_THROWS(node.update_elements(element_ids, element_values));
+            }
+            THEN("update_elements should update the pointers") {
+                std::vector<uint32_t> element_ids = {0, 1, 2, 3, 4};
+                std::vector<double> new_elements = {100, 111, 122, 133, 144};
+                std::vector<double*> element_values;
+                for (auto& element : new_elements) {
+                    element_values.push_back(&element);
+                }
+                node.update_elements(element_ids, element_values);
+                std::vector<float> result(5, -1.);
+                node.fill_data(result.begin());
+                REQUIRE(result == std::vector<float>(new_elements.begin(), new_elements.end()));
+            }
         }
 
         WHEN("We add a std::function<double()> element") {
