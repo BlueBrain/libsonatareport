@@ -189,8 +189,7 @@ int main() {
     sonata_set_max_buffer_size_hint(20);
     sonata_set_atomic_step(dt);
 
-    sonata_setup_communicators();
-    sonata_prepare_datasets();
+    sonata_setup_reports();
     sonata_time_data();
 
     if (global_rank == 0) {
@@ -236,8 +235,7 @@ int main() {
          "soma",
          units);
 
-    sonata_setup_communicators();
-    sonata_prepare_datasets();
+    sonata_setup_reports();
     sonata_write_buffered_data(buffered_soma_report, soma_buffered_data.data(), soma_buffered_data.size(), num_steps);
     sonata_clear();
 

@@ -63,6 +63,14 @@ bool SonataReport::report_exists(const std::string& name) const {
     return reports_.find(name) != reports_.end();
 }
 
+void SonataReport::setup_reports() {
+    if (!reports_initialized_) {
+        create_communicators();
+        prepare_datasets();
+        reports_initialized_ = true;
+    }
+}
+
 void SonataReport::create_communicators() {
     std::vector<std::string> report_names;
     report_names.reserve(reports_.size());

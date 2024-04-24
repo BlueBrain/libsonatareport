@@ -71,14 +71,18 @@ int sonata_update_elements(const char* report_name,
 
 /**
  * \brief Setup buffers and create datasets
- * \return 0
  */
-int sonata_prepare_datasets();
+void sonata_prepare_datasets();
 
 /**
  * \brief Initialize communicators
  */
 void sonata_setup_communicators();
+
+/**
+ * \brief Initialize reports
+ */
+void sonata_setup_reports();
 
 /**
  * \brief Minimum number steps needed to allocate in a single buffer

@@ -118,8 +118,7 @@ SCENARIO("Test SonataReport API", "[sonatareport]") {
                 auto num_steps = static_cast<int>(std::ceil(sim_steps));
 
                 sonata_set_atomic_step(dt);
-                sonata_setup_communicators();
-                sonata_prepare_datasets();
+                sonata_setup_reports();
 
                 sonata_set_min_steps_to_record(10);
 

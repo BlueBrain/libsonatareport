@@ -118,9 +118,12 @@ void sonata_setup_communicators() {
     sonata_report.create_communicators();
 }
 
-int sonata_prepare_datasets() {
+void sonata_prepare_datasets() {
     sonata_report.prepare_datasets();
-    return 0;
+}
+
+void sonata_setup_reports() {
+    sonata_report.setup_reports();
 }
 
 void sonata_set_min_steps_to_record(int steps) {
