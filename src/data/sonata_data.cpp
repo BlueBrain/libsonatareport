@@ -142,7 +142,7 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
         uint64_t current_node_id = kv.second->get_node_id();
         // Check if node is set to be recorded (found in nodeids)
         if (std::find(node_ids.begin(), node_ids.end(), current_node_id) != node_ids.end()) {
-            kv.second->fill_data(report_buffer_.begin() + local_position);
+            kv.second->fill_data(report_buffer_, local_position);
             nodes_recorded_.insert(current_node_id);
         }
         local_position += kv.second->get_num_elements();
@@ -175,7 +175,7 @@ void SonataData::record_data(double step) {
             local_position);
     }
     for (auto& kv : *nodes_) {
-        kv.second->fill_data(report_buffer_.begin() + local_position);
+        kv.second->fill_data(report_buffer_, local_position);
         local_position += kv.second->get_num_elements();
     }
     current_step_++;

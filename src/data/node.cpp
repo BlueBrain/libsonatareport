@@ -1,7 +1,9 @@
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
+#include <iostream>
 
+#include "../library/sonatareport.h"
 #include "node.h"
 
 namespace bbp {
@@ -30,8 +32,37 @@ void Node::add_element(std::function<double()> element_value, uint32_t element_i
     element_ids_.push_back(element_id);
 }
 
-void Node::fill_data(std::vector<float>::iterator it) {
+void Node::fill_data(std::vector<float>& report, size_t position) {
     assert(elements_.empty() || element_handles_.empty());
+
+    {
+        size_t num_elements_to_copy = 0;
+
+        if (!elements_.empty()) {
+            num_elements_to_copy = elements_.size();
+        } else if (!element_handles_.empty()) {
+            num_elements_to_copy = element_handles_.size();
+        }
+
+        size_t total_size_report = report.size();
+        size_t start_position = position;
+
+        if (start_position + num_elements_to_copy > total_size_report) {
+
+            size_t overflow = (start_position + num_elements_to_copy) - total_size_report;
+
+            std::cerr << "ERROR: Overflow detected in Node::fill_data()\n";
+            std::cerr << "Rank: " << SonataReport::rank_ << "\n";
+            std::cerr << "Report Allocated Size: " << total_size_report << "\n";
+            std::cerr << "Elements to Write: " << num_elements_to_copy << "\n";
+            std::cerr << "Overflow: " << overflow << "\n";
+
+            abort();
+        }
+    }
+
+    std::vector<float>::iterator it = report.begin() + position;
+
     if (!elements_.empty()) {
         std::transform(elements_.begin(), elements_.end(), it, [](auto elem) -> float {
             return *elem;

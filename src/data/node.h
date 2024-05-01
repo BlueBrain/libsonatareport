@@ -13,7 +13,7 @@ class Node
   public:
     explicit Node(uint64_t node_id);
     virtual ~Node() = default;
-    void fill_data(std::vector<float>::iterator it);
+    void fill_data(std::vector<float>& report, size_t position);
     void refresh_pointers(std::function<double*(double*)> refresh_function);
     virtual void add_element(double* element_value, uint32_t element_id);
     virtual void add_element(std::function<double()> element_value, uint32_t element_id);
