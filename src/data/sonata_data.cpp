@@ -127,6 +127,7 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
     if (SonataReport::rank_ == 0) {
         logger->trace(
             "Recording data for population {}, step={} last_step_recorded={} steps recorded {} "
+            "current_step={} steps_to_write={} "
             "first node_id={} "
             "buffer_size={} "
             "and offset={}",
@@ -134,6 +135,8 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
             step,
             last_step_recorded_,
             steps_recorded_,
+            current_step_,
+            steps_to_write_,
             node_ids[0],
             report_buffer_.size(),
             local_position);
