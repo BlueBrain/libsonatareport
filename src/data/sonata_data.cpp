@@ -151,6 +151,10 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
     // Increase steps recorded when all nodes from specific rank has been already recorded
     if (nodes_recorded_.size() == nodes_->size()) {
         steps_recorded_++;
+        if (current_step_ + steps_recorded_ == steps_to_write_) {
+            flush();
+            nodes_recorded_.clear();
+        }
     }
 }
 
