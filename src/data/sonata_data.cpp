@@ -357,6 +357,12 @@ void SonataData::write_data(const std::vector<float>& buffered_data, uint32_t st
 
 void SonataData::flush() {
     write_data(report_buffer_, current_step_);
+    if (getenv("LIBSONATAREPORT_ENABLE_FLUSH") != nullptr) {
+        if (SonataReport::rank_ == 0) {
+            logger->debug("Flushing data from report {}", report_name_);
+        }
+        hdf5_writer_->flush();
+    }
 }
 
 void SonataData::close() {
