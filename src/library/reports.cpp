@@ -19,6 +19,9 @@ int sonata_create_report(const char* report_name,
     try {
         if (!sonata_report.report_exists(report_name)) {
             sonata_report.create_report(report_name, kind, tstart, tend, dt, units);
+        } else {
+            logger->warn("Report '{}' already exists.", report_name);
+            return -2;
         }
     } catch (const std::exception& err) {
         logger->error(err.what());
@@ -86,13 +89,41 @@ int sonata_add_element_handle(const char* report_name,
         report_name, population_name, node_id, element_id, std::move(element_value));
 }
 
+int sonata_update_elements(const char* report_name,
+                           const char* population_name,
+                           uint64_t node_id,
+                           const uint32_t* element_ids,
+                           double** element_values) {
+    if (!sonata_report.report_exists(report_name)) {
+        return -2;
+    }
+    try {
+        auto report = sonata_report.get_report(report_name);
+        auto node = report->get_node(population_name, node_id);
+        std::vector<uint32_t> element_ids_vec(element_ids, element_ids + node->get_num_elements());
+        std::vector<double*> element_values_vec(element_values,
+                                                element_values + node->get_num_elements());
+        node->update_elements(element_ids_vec, element_values_vec);
+    } catch (const std::out_of_range& err) {
+        logger->error(err.what());
+        return -3;
+    } catch (const std::exception& err) {
+        logger->error(err.what());
+        return -1;
+    }
+    return 0;
+}
+
 void sonata_setup_communicators() {
     sonata_report.create_communicators();
 }
 
-int sonata_prepare_datasets() {
+void sonata_prepare_datasets() {
     sonata_report.prepare_datasets();
-    return 0;
+}
+
+void sonata_setup_reports() {
+    sonata_report.setup_reports();
 }
 
 void sonata_set_min_steps_to_record(int steps) {

@@ -57,6 +57,7 @@ class SonataReport
 
     void create_communicators();
     void prepare_datasets();
+    void setup_reports();
 
     void create_spikefile(const std::string& output_dir, const std::string& filename = "out");
     void add_spikes_population(const std::string& population_name,
@@ -77,6 +78,7 @@ class SonataReport
   private:
     reports_t reports_;
     std::unique_ptr<SonataData> spike_data_;
+    bool reports_initialized_ = false;
 };
 
 }  // namespace sonata

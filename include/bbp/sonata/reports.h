@@ -52,16 +52,37 @@ int sonata_add_element(const char* report_name,
                        uint64_t node_id,
                        uint32_t element_id,
                        double* element_value);
+
+/*!
+ * \brief Update multiple elements to an existing node on a report
+ * \param report_name name of the report
+ * \param population_name name of the population
+ * \param node_id node identifier
+ * \param element_ids array of element identifiers
+ * \param element_values array of pointers to element values
+ * \return 0 if operator succeeded, -2 if the report doesn't exist, -3 if the specified node
+ * doesn't exist, -1 for other errors.
+ */
+int sonata_update_elements(const char* report_name,
+                           const char* population_name,
+                           uint64_t node_id,
+                           const uint32_t* element_ids,
+                           double** element_values);
+
 /**
  * \brief Setup buffers and create datasets
- * \return 0
  */
-int sonata_prepare_datasets();
+void sonata_prepare_datasets();
 
 /**
  * \brief Initialize communicators
  */
 void sonata_setup_communicators();
+
+/**
+ * \brief Initialize reports
+ */
+void sonata_setup_reports();
 
 /**
  * \brief Minimum number steps needed to allocate in a single buffer
