@@ -113,6 +113,7 @@ class SonataData
     uint32_t reporting_period_ = 0;
     double last_step_recorded_ = 0.;
     double last_step_ = 0.;
+    bool flush_when_full_ = false;
 
     std::vector<uint64_t> node_ids_;
     std::vector<uint64_t> index_pointers_;

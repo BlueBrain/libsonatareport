@@ -31,6 +31,7 @@ class HDF5Writer
     void write(const std::string& name, const std::vector<T>& buffer);
     void write_time(const std::string& dataset_name, const std::array<double, 3>& buffer);
     void close();
+    void flush();
 
   private:
     std::string report_name_;

@@ -35,6 +35,7 @@ SonataData::SonataData(const std::string& report_name,
     reporting_period_ = static_cast<int>(dt / SonataReport::atomic_step_);
     last_step_recorded_ = tstart / SonataReport::atomic_step_;
     last_step_ = tend / SonataReport::atomic_step_;
+    flush_when_full_ = getenv("LIBSONATAREPORT_ENABLE_FLUSH") != nullptr;
 }
 
 SonataData::SonataData(const std::string& report_name)
@@ -193,7 +194,7 @@ void SonataData::check_and_write(double timestep) {
     }
 
     if (SonataReport::rank_ == 0) {
-        logger->debug("UPDATING timestep t={} for report {} and population {}",
+        logger->trace("UPDATING timestep t={} for report {} and population {}",
                       timestep,
                       report_name_,
                       population_name_);
@@ -357,6 +358,12 @@ void SonataData::write_data(const std::vector<float>& buffered_data, uint32_t st
 
 void SonataData::flush() {
     write_data(report_buffer_, current_step_);
+    if (flush_when_full_) {
+        if (SonataReport::rank_ == 0) {
+            logger->debug("Flushing data from report {}", report_name_);
+        }
+        hdf5_writer_->flush();
+    }
 }
 
 void SonataData::close() {
