@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 
@@ -46,7 +47,7 @@ SonataData::SonataData(const std::string& report_name)
 void SonataData::prepare_buffer(size_t max_buffer_size) {
     if (SonataReport::rank_ == 0) {
         logger->debug("PREPARING BUFFER for report {} and population {}",
-                      report_name_,
+                      std::filesystem::path(report_name_).filename().string(),
                       population_name_);
     }
 
@@ -115,25 +116,15 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
     uint32_t offset = static_cast<uint32_t>((step - last_step_recorded_) / reporting_period_);
     uint32_t local_position = last_position_ + total_elements_ * offset;
 
-    if (steps_recorded_ >= steps_to_write_) {
-        if (SonataReport::rank_ == 0) {
-            logger->trace("Already recorded {} steps, skipping report recording for {} population",
-                          steps_recorded_,
-                          population_name_);
-        }
-        return;
-    }
-
     if (SonataReport::rank_ == 0) {
         logger->trace(
-            "Recording data for population {}, step={} last_step_recorded={} steps recorded {} "
+            "Recording data for population {}, step={} last_step_recorded={} "
             "first node_id={} "
             "buffer_size={} "
             "and offset={}",
             population_name_,
             step,
             last_step_recorded_,
-            steps_recorded_,
             node_ids[0],
             report_buffer_.size(),
             local_position);
@@ -150,21 +141,15 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
 
     // Increase steps recorded when all nodes from specific rank has been already recorded
     if (nodes_recorded_.size() == nodes_->size()) {
-        steps_recorded_++;
+        current_step_++;
+        last_position_ += total_elements_;
+        last_step_recorded_ += reporting_period_;
+        nodes_recorded_.clear();
     }
 }
 
 void SonataData::record_data(double step) {
     uint32_t local_position = last_position_;
-
-    if (steps_recorded_ >= steps_to_write_) {
-        if (SonataReport::rank_ == 0) {
-            logger->trace("Already recorded {} steps, skipping report recording for {} population",
-                          steps_recorded_,
-                          population_name_);
-        }
-        return;
-    }
 
     if (SonataReport::rank_ == 0) {
         logger->trace(
@@ -193,41 +178,36 @@ void SonataData::check_and_write(double timestep) {
     }
 
     if (SonataReport::rank_ == 0) {
-        logger->debug("UPDATING timestep t={} for report {} and population {}",
-                      timestep,
-                      report_name_,
-                      population_name_);
+        logger->debug(
+            "UPDATING timestep t={} for report {} and population {} current_step_={} "
+            "steps_to_write_={}",
+            timestep,
+            std::filesystem::path(report_name_).filename().string(),
+            population_name_,
+            current_step_,
+            steps_to_write_);
     }
-    current_step_ += steps_recorded_;
-    last_position_ += total_elements_ * steps_recorded_;
-    last_step_recorded_ += reporting_period_ * steps_recorded_;
-    nodes_recorded_.clear();
 
-    // Write when buffer is full, finish all remaining recordings or when record several steps in a
-    // row
-    if (current_step_ == steps_to_write_ || current_step_ == remaining_steps_ ||
-        steps_recorded_ > 1) {
+    // Write when buffer is full or finish all remaining recordings
+    if (current_step_ == steps_to_write_ || current_step_ == remaining_steps_) {
         if (SonataReport::rank_ == 0) {
             logger->trace(
-                "Writing to file {}! population {} steps_to_write={}, current_step={}, "
-                "remaining_steps={} "
-                "steps_recorded={}",
-                report_name_,
+                "Writing to file {}! population {} current_step={}, steps_to_write={}, "
+                "remaining_steps={} ",
+                std::filesystem::path(report_name_).filename().string(),
                 population_name_,
-                steps_to_write_,
                 current_step_,
-                remaining_steps_,
-                steps_recorded_);
+                steps_to_write_,
+                remaining_steps_);
         }
         flush();
     }
-    steps_recorded_ = 0;
 }
 
 void SonataData::prepare_dataset() {
     if (SonataReport::rank_ == 0) {
         logger->debug("PREPARING HEADER for report {} and population {}",
-                      report_name_,
+                      std::filesystem::path(report_name_).filename().string(),
                       population_name_);
     }
     // Prepare /report
@@ -342,7 +322,7 @@ void SonataData::write_data(const std::vector<float>& buffered_data, uint32_t st
     }
     if (SonataReport::rank_ == 0) {
         logger->debug("WRITING timestep data to file {} in population {}",
-                      report_name_,
+                      std::filesystem::path(report_name_).filename().string(),
                       population_name_);
     }
     hdf5_writer_->write_2D(buffered_data, steps_to_write, total_elements_);

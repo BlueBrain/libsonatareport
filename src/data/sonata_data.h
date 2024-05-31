@@ -107,7 +107,6 @@ class SonataData
     uint32_t num_steps_ = 0;
     uint32_t steps_to_write_ = 0;
     uint32_t current_step_ = 0;
-    uint32_t steps_recorded_ = 0;
     uint32_t last_position_ = 0;
     uint32_t remaining_steps_ = 0;
     uint32_t reporting_period_ = 0;
