@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <cassert>
 #include <stdexcept>
+#include <iostream>
+#include "../library/sonatareport.h"
 
 #include "node.h"
 
@@ -53,8 +55,45 @@ void Node::update_elements(std::vector<uint32_t> element_ids, std::vector<double
 }
 
 
-void Node::fill_data(std::vector<float>::iterator it) {
+void Node::fill_data(std::vector<float>& report, size_t position, double step) {
     assert(elements_.empty() || element_handles_.empty());
+
+    {
+        size_t num_elements_to_copy = 0;
+
+        if (!elements_.empty()) {
+            num_elements_to_copy = elements_.size();
+        } else if (!element_handles_.empty()) {
+            num_elements_to_copy = element_handles_.size();
+        }
+
+        size_t total_size_report = report.size();
+        size_t start_position = position;
+
+        if (start_position + num_elements_to_copy > total_size_report) {
+
+            size_t overflow = (start_position + num_elements_to_copy) - total_size_report;
+
+            std::cerr << "ERROR: Overflow detected in Node::fill_data()\n";
+            std::cerr << "Rank: " << SonataReport::rank_ << "\n";
+            std::cerr << "Report Allocated Size: " << total_size_report << "\n";
+            std::cerr << "Elements to Write: " << num_elements_to_copy << "\n";
+            std::cerr << "Overflow: " << overflow << "\n";
+
+            abort();
+        }
+    }
+
+    std::set<uint64_t> specific_node_ids = {2482561, 2537489, 2584861, 2644780, 2705687, 2761049, 2807052, 2854979, 2920895, 2974962, 3028685, 3074604, 3098646, 3116703};
+    if (step == 1360.0) {
+        if (specific_node_ids.find(node_id_) != specific_node_ids.end()) {
+            std::cout << "Rank: " << SonataReport::rank_ <<", Step: " << step << ", Node ID: " << node_id_ << ", Report size: " << report.size() << ", Position: " << position << std::endl;
+            for (const auto& elem : elements_) {
+                std::cout << " ** Pointer value: " << *elem << std::endl;
+            }
+        }
+    }
+    std::vector<float>::iterator it = report.begin() + position;
     if (!elements_.empty()) {
         std::transform(elements_.begin(), elements_.end(), it, [](auto elem) -> float {
             return *elem;

@@ -143,7 +143,7 @@ void SonataData::record_data(double step, const std::vector<uint64_t>& node_ids)
         uint64_t current_node_id = kv.second->get_node_id();
         // Check if node is set to be recorded (found in nodeids)
         if (std::find(node_ids.begin(), node_ids.end(), current_node_id) != node_ids.end()) {
-            kv.second->fill_data(report_buffer_.begin() + local_position);
+            kv.second->fill_data(report_buffer_, local_position, step);
             nodes_recorded_.insert(current_node_id);
         }
         local_position += kv.second->get_num_elements();
@@ -176,7 +176,7 @@ void SonataData::record_data(double step) {
             local_position);
     }
     for (auto& kv : *nodes_) {
-        kv.second->fill_data(report_buffer_.begin() + local_position);
+        kv.second->fill_data(report_buffer_, local_position, step);
         local_position += kv.second->get_num_elements();
     }
     current_step_++;
@@ -345,6 +345,12 @@ void SonataData::write_data(const std::vector<float>& buffered_data, uint32_t st
         logger->debug("WRITING timestep data to file {} in population {}",
                       report_name_,
                       population_name_);
+    }
+    if (SonataReport::rank_ == 62) {
+        logger->debug("First 14 elements of buffered data:");
+        for (size_t i = 0; i < std::min(buffered_data.size(), static_cast<size_t>(14)); ++i) {
+            logger->debug("Element {}: {}", i, buffered_data[i]);
+        }
     }
     hdf5_writer_->write_2D(buffered_data, steps_to_write, total_elements_);
     remaining_steps_ -= steps_to_write;
