@@ -349,6 +349,10 @@ void SonataData::write_data(const std::vector<float>& buffered_data, uint32_t st
         logger->debug("First 14 elements of buffered data:");
         for (size_t i = 0; i < std::min(buffered_data.size(), static_cast<size_t>(14)); ++i) {
             logger->debug("Element {}: {}", i, buffered_data[i]);
+            if (std::abs(buffered_data[i]) < 1e-3) {
+                std::cerr << "Aborting due to the buffered data value being too close to zero." << std::endl;
+                abort();
+            }
         }
     }
     hdf5_writer_->write_2D(buffered_data, steps_to_write, total_elements_);
