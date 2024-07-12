@@ -108,14 +108,42 @@ void HDF5Writer::write_2D(const std::vector<float>& buffer,
     hsize_t dims = buffer.size();
     hsize_t global_dims = Implementation::get_global_dims(report_name_, dims);
 
+    if (SonataReport::rank_ == 62) {
+        std::cout << "write_2D called with buffer size: " << buffer.size() << std::endl;
+        std::cout << "Global dimensions: " << global_dims << std::endl;
+        std::cout << "First 14 elements of buffered data:" << std::endl;
+        for (size_t i = 0; i < std::min(buffer.size(), static_cast<size_t>(14)); ++i) {
+            std::cout << "Element " << i << ": " << buffer[i] << std::endl;
+        }
+    }
     if (global_dims > 0) {
         std::array<hsize_t, 2> count = {steps_to_write, total_elements};
         hid_t memspace = H5Screate_simple(2, count.data(), nullptr);
-        hid_t filespace = H5Dget_space(dataset_);
+        if (memspace < 0) {
+            std::cerr << "Error creating memory space." << std::endl;
+            return;
+        }
 
-        H5Sselect_hyperslab(
+        hid_t filespace = H5Dget_space(dataset_);
+        if (filespace < 0) {
+            std::cerr << "Error getting file space." << std::endl;
+            H5Sclose(memspace);
+            return;
+        }
+
+        herr_t status = H5Sselect_hyperslab(
             filespace, H5S_SELECT_SET, offset_.data(), nullptr, count.data(), nullptr);
-        H5Dwrite(dataset_, H5T_NATIVE_FLOAT, memspace, filespace, collective_list_, buffer.data());
+        if (status < 0) {
+            std::cerr << "Error selecting hyperslab." << std::endl;
+            H5Sclose(filespace);
+            H5Sclose(memspace);
+            return;
+        }
+
+        status = H5Dwrite(dataset_, H5T_NATIVE_FLOAT, memspace, filespace, collective_list_, buffer.data());
+        if (status < 0) {
+            std::cerr << "Error writing data." << std::endl;
+        }
 
         H5Sclose(filespace);
         H5Sclose(memspace);
