@@ -316,9 +316,7 @@ void SonataData::write_spikes_header(Population& population) {
                                 population.get_spike_node_ids(),
                                 order_by);
     hdf5_writer_->write(spikes_population_group + "/timestamps", population.get_spike_timestamps());
-    if (timestamps_size > 0) {
-        hdf5_writer_->configure_attribute(spikes_population_group + "/timestamps", "units", "ms");
-    }
+    hdf5_writer_->configure_attribute(spikes_population_group + "/timestamps", "units", "ms");
     std::vector<uint64_t> sonata_spike_node_ids(population.get_spike_node_ids());
     convert_gids_to_sonata(sonata_spike_node_ids, population.get_population_offset());
     hdf5_writer_->write(spikes_population_group + "/node_ids", sonata_spike_node_ids);
