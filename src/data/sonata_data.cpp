@@ -310,8 +310,6 @@ void SonataData::write_spikes_header(Population& population) {
     hdf5_writer_->configure_group("/spikes");
     hdf5_writer_->configure_group(spikes_population_group);
     hdf5_writer_->configure_enum_attribute(spikes_population_group, "sorting", order_by);
-    hsize_t timestamps_size =
-        Implementation::get_global_dims(report_name_, population.get_spike_timestamps().size());
     Implementation::sort_spikes(population.get_spike_timestamps(),
                                 population.get_spike_node_ids(),
                                 order_by);
