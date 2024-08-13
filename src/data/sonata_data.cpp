@@ -310,15 +310,11 @@ void SonataData::write_spikes_header(Population& population) {
     hdf5_writer_->configure_group("/spikes");
     hdf5_writer_->configure_group(spikes_population_group);
     hdf5_writer_->configure_enum_attribute(spikes_population_group, "sorting", order_by);
-    hsize_t timestamps_size =
-        Implementation::get_global_dims(report_name_, population.get_spike_timestamps().size());
     Implementation::sort_spikes(population.get_spike_timestamps(),
                                 population.get_spike_node_ids(),
                                 order_by);
     hdf5_writer_->write(spikes_population_group + "/timestamps", population.get_spike_timestamps());
-    if (timestamps_size > 0) {
-        hdf5_writer_->configure_attribute(spikes_population_group + "/timestamps", "units", "ms");
-    }
+    hdf5_writer_->configure_attribute(spikes_population_group + "/timestamps", "units", "ms");
     std::vector<uint64_t> sonata_spike_node_ids(population.get_spike_node_ids());
     convert_gids_to_sonata(sonata_spike_node_ids, population.get_population_offset());
     hdf5_writer_->write(spikes_population_group + "/node_ids", sonata_spike_node_ids);
