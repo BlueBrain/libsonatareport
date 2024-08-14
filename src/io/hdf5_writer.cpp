@@ -26,7 +26,8 @@ HDF5Writer::HDF5Writer(const std::string& report_name, hid_t file_handler)
 HDF5Writer::HDF5Writer(const std::string& report_name)
     : report_name_(report_name) {
     file_ = Implementation::prepare_write(report_name);
-    collective_list_ = Implementation::initialize_colective();
+    // Change this line to use independent list instead of collective
+    independent_list_ = Implementation::initialize_independent();
 
     // Create enum type for the ordering of the spikes
     spikes_attr_type_ = H5Tenum_create(H5T_STD_U8LE);
@@ -115,7 +116,8 @@ void HDF5Writer::write_2D(const std::vector<float>& buffer,
 
         H5Sselect_hyperslab(
             filespace, H5S_SELECT_SET, offset_.data(), nullptr, count.data(), nullptr);
-        H5Dwrite(dataset_, H5T_NATIVE_FLOAT, memspace, filespace, collective_list_, buffer.data());
+        // Change this line to use independent_list_ instead of collective_list_
+        H5Dwrite(dataset_, H5T_NATIVE_FLOAT, memspace, filespace, independent_list_, buffer.data());
 
         H5Sclose(filespace);
         H5Sclose(memspace);
@@ -142,7 +144,8 @@ void HDF5Writer::write(const std::string& dataset_name, const std::vector<T>& bu
         hid_t filespace = H5Dget_space(data_set);
 
         H5Sselect_hyperslab(filespace, H5S_SELECT_SET, &offset, nullptr, &dims, nullptr);
-        H5Dwrite(data_set, type, memspace, filespace, collective_list_, buffer.data());
+        // Change this line to use independent_list_ instead of collective_list_
+        H5Dwrite(data_set, type, memspace, filespace, independent_list_, buffer.data());
 
         H5Sclose(filespace);
         H5Sclose(memspace);
