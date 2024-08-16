@@ -129,6 +129,12 @@ jobs:
         cmake --build nrn/build --parallel
         cmake --build nrn/build --target install
 
+    - name: Install h5py
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      run: |
+        . ./venv/bin/activate
+        CC=mpicc CXX=mpic++ pip install --no-binary=h5py h5py
+
     - name: Install neurodamus
       run: |
         . ./venv/bin/activate
