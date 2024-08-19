@@ -20,12 +20,12 @@ on:
       PY_NEURODAMUS_BRANCH:
         description: 'py-neurodamus branch to use'
         required: false
+      NEURODAMUS_MODELS_BRANCH:
+        description: 'neurodamus-models branch to use'
+        required: false
 
 env:
   NEURON_COMMIT_ID: 'c48d7d5'
-  NEURON_BRANCH: ${{ inputs.NEURON_BRANCH || 'master' }}
-  LIBSONATA_BRANCH: ${{ inputs.LIBSONATA_BRANCH || 'v0.1.28' }}
-  PY_NEURODAMUS_BRANCH: ${{ inputs.PY_NEURODAMUS_BRANCH || '3.6.0' }}
 
 jobs:
   simulation:
@@ -46,6 +46,16 @@ jobs:
         fetch-depth: 0
         submodules: 'recursive'
 
+    - name: Get latest tags
+      run: |
+        echo "NEURON_BRANCH=${{ inputs.NEURON_BRANCH || github.event.inputs.NEURON_BRANCH || 'master' }}" >> $GITHUB_ENV
+        LIBSONATA_LATEST=$(curl -s https://api.github.com/repos/BlueBrain/libsonata/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+        echo "LIBSONATA_BRANCH=${{ inputs.LIBSONATA_BRANCH || github.event.inputs.LIBSONATA_BRANCH || $LIBSONATA_LATEST }}" >> $GITHUB_ENV
+        PY_NEURODAMUS_LATEST=$(curl -s https://api.github.com/repos/BlueBrain/neurodamus/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+        echo "PY_NEURODAMUS_BRANCH=${{ inputs.PY_NEURODAMUS_BRANCH || github.event.inputs.PY_NEURODAMUS_BRANCH || $PY_NEURODAMUS_LATEST }}" >> $GITHUB_ENV
+        NEURODAMUS_MODELS_LATEST=$(curl -s https://api.github.com/repos/BlueBrain/neurodamus-models/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+        echo "NEURODAMUS_MODELS_BRANCH=${{ inputs.NEURODAMUS_MODELS_BRANCH || github.event.inputs.NEURODAMUS_MODELS_BRANCH || $NEURODAMUS_MODELS_LATEST }}" >> $GITHUB_ENV
+
     - name: Get HEAD commit message and look for branches
       run: |
         COMMIT_MESSAGE=$(git log -1 --pretty=%B)
@@ -56,6 +66,8 @@ jobs:
         if [[ ! -z $LIBSONATA_BRANCH ]]; then echo "LIBSONATA_BRANCH=$LIBSONATA_BRANCH" >> $GITHUB_ENV; fi
         PY_NEURODAMUS_BRANCH=$(echo $COMMIT_MESSAGE | grep -Po 'PY_NEURODAMUS_BRANCH=\K[0-9a-zA-Z/_.\-]*' || true)
         if [[ ! -z $PY_NEURODAMUS_BRANCH ]]; then echo "PY_NEURODAMUS_BRANCH=$PY_NEURODAMUS_BRANCH" >> $GITHUB_ENV; fi
+        NEURODAMUS_MODELS_BRANCH=$(echo $COMMIT_MESSAGE | grep -Po 'NEURODAMUS_MODELS_BRANCH=\K[0-9a-zA-Z/_.\-]*' || true)
+        if [[ ! -z $NEURODAMUS_MODELS_BRANCH ]]; then echo "NEURODAMUS_MODELS_BRANCH=$NEURODAMUS_MODELS_BRANCH" >> $GITHUB_ENV; fi
 
     - name: Install system dependencies
       run: |
@@ -145,10 +157,11 @@ jobs:
     - name: Build models
       run: |
         export PATH=$(pwd)/nrn/build/install/bin:$PATH
-        # copy mod files from the Zenodo link
-        wget --output-document="O1_mods.xz" --quiet "https://zenodo.org/record/8026353/files/O1_mods.xz?download=1"
-        tar -xf O1_mods.xz
-        cp -r mod neurodamus/tests/share/
+        # Clone neurodamus-models repository
+        git clone --branch=${{ env.NEURODAMUS_MODELS_BRANCH }} https://github.com/BlueBrain/neurodamus-models.git
+        mkdir -p neurodamus/tests/share/mod
+        cp -L -r neurodamus-models/neocortex/mod/v5/* neurodamus/tests/share/mod
+        cp -L -r neurodamus-models/neocortex/mod/v6/* neurodamus/tests/share/mod
         cp neurodamus/neurodamus/data/mod/*.mod neurodamus/tests/share/mod/
         cd neurodamus
         ./docker/build_neurodamus.sh tests/share/mod
