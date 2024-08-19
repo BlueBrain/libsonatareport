@@ -50,11 +50,11 @@ jobs:
       run: |
         echo "NEURON_BRANCH=${{ inputs.NEURON_BRANCH || github.event.inputs.NEURON_BRANCH || 'master' }}" >> $GITHUB_ENV
         LIBSONATA_LATEST=$(curl -s https://api.github.com/repos/BlueBrain/libsonata/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
-        echo "LIBSONATA_BRANCH=${{ inputs.LIBSONATA_BRANCH || github.event.inputs.LIBSONATA_BRANCH || $LIBSONATA_LATEST }}" >> $GITHUB_ENV
+        echo "LIBSONATA_BRANCH=${{ inputs.LIBSONATA_BRANCH || github.event.inputs.LIBSONATA_BRANCH || '$LIBSONATA_LATEST' }}" >> $GITHUB_ENV
         PY_NEURODAMUS_LATEST=$(curl -s https://api.github.com/repos/BlueBrain/neurodamus/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
-        echo "PY_NEURODAMUS_BRANCH=${{ inputs.PY_NEURODAMUS_BRANCH || github.event.inputs.PY_NEURODAMUS_BRANCH || $PY_NEURODAMUS_LATEST }}" >> $GITHUB_ENV
+        echo "PY_NEURODAMUS_BRANCH=${{ inputs.PY_NEURODAMUS_BRANCH || github.event.inputs.PY_NEURODAMUS_BRANCH || '$PY_NEURODAMUS_LATEST' }}" >> $GITHUB_ENV
         NEURODAMUS_MODELS_LATEST=$(curl -s https://api.github.com/repos/BlueBrain/neurodamus-models/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
-        echo "NEURODAMUS_MODELS_BRANCH=${{ inputs.NEURODAMUS_MODELS_BRANCH || github.event.inputs.NEURODAMUS_MODELS_BRANCH || $NEURODAMUS_MODELS_LATEST }}" >> $GITHUB_ENV
+        echo "NEURODAMUS_MODELS_BRANCH=${{ inputs.NEURODAMUS_MODELS_BRANCH || github.event.inputs.NEURODAMUS_MODELS_BRANCH || '$NEURODAMUS_MODELS_LATEST' }}" >> $GITHUB_ENV
 
     - name: Get HEAD commit message and look for branches
       run: |
