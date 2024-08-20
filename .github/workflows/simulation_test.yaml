@@ -173,8 +173,8 @@ jobs:
           export RDMAV_FORK_SAFE=1
         fi;
         export PYTHONPATH=$(pwd)/nrn/build/lib/python:$PYTHONPATH
-        cp neurodamus/neurodamus/data/hoc/* neurodamus/tests/share/hoc/
-        export HOC_LIBRARY_PATH=$(pwd)/neurodamus/tests/share/hoc
+        cp neurodamus-models/neocortex/hoc/* neurodamus/neurodamus/data/hoc/
+        export HOC_LIBRARY_PATH=$(pwd)/neurodamus/neurodamus/data/hoc
         export NEURODAMUS_PYTHON=$(pwd)/neurodamus/neurodamus/data
         export CORENEURONLIB=$(pwd)/neurodamus/x86_64/libcorenrnmech.so
         export PATH=$(pwd)/neurodamus/x86_64:$PATH
