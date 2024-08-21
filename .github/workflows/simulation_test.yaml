@@ -1,0 +1,193 @@
+name: libsonatareport build and test
+on:
+  schedule:
+    # every evening at 20:00 UTC
+    - cron: '0 20 * * *'
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+    inputs:
+      NEURON_BRANCH:
+        description: 'NEURON branch to use'
+        required: false
+      LIBSONATA_BRANCH:
+        description: 'libsonata branch to use'
+        required: false
+      PY_NEURODAMUS_BRANCH:
+        description: 'py-neurodamus branch to use'
+        required: false
+      NEURODAMUS_MODELS_BRANCH:
+        description: 'neurodamus-models branch to use'
+        required: false
+
+env:
+  NEURON_COMMIT_ID: 'c48d7d5'
+
+jobs:
+  simulation:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04]
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Checkout libsonatareport repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: 'recursive'
+
+    - name: Get latest tags
+      run: |
+        echo "NEURON_BRANCH=${{ inputs.NEURON_BRANCH || github.event.inputs.NEURON_BRANCH || 'master' }}" >> $GITHUB_ENV
+        LIBSONATA_LATEST=$(curl -s https://api.github.com/repos/BlueBrain/libsonata/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+        echo "LIBSONATA_BRANCH=${{ inputs.LIBSONATA_BRANCH || github.event.inputs.LIBSONATA_BRANCH || '$LIBSONATA_LATEST' }}" >> $GITHUB_ENV
+        PY_NEURODAMUS_LATEST=$(curl -s https://api.github.com/repos/BlueBrain/neurodamus/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+        echo "PY_NEURODAMUS_BRANCH=${{ inputs.PY_NEURODAMUS_BRANCH || github.event.inputs.PY_NEURODAMUS_BRANCH || '$PY_NEURODAMUS_LATEST' }}" >> $GITHUB_ENV
+        NEURODAMUS_MODELS_LATEST=$(curl -s https://api.github.com/repos/BlueBrain/neurodamus-models/releases/latest | grep -oP '"tag_name": "\K(.*)(?=")')
+        echo "NEURODAMUS_MODELS_BRANCH=${{ inputs.NEURODAMUS_MODELS_BRANCH || github.event.inputs.NEURODAMUS_MODELS_BRANCH || '$NEURODAMUS_MODELS_LATEST' }}" >> $GITHUB_ENV
+
+    - name: Get HEAD commit message and look for branches
+      run: |
+        COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+        echo $COMMIT_MESSAGE
+        NEURON_BRANCH=$(echo $COMMIT_MESSAGE | grep -Po 'NEURON_BRANCH=\K[0-9a-zA-Z/_.\-]*' || true)
+        if [[ ! -z $NEURON_BRANCH ]]; then echo "NEURON_BRANCH=$NEURON_BRANCH" >> $GITHUB_ENV; fi
+        LIBSONATA_BRANCH=$(echo $COMMIT_MESSAGE | grep -Po 'LIBSONATA_BRANCH=\K[0-9a-zA-Z/_.\-]*' || true)
+        if [[ ! -z $LIBSONATA_BRANCH ]]; then echo "LIBSONATA_BRANCH=$LIBSONATA_BRANCH" >> $GITHUB_ENV; fi
+        PY_NEURODAMUS_BRANCH=$(echo $COMMIT_MESSAGE | grep -Po 'PY_NEURODAMUS_BRANCH=\K[0-9a-zA-Z/_.\-]*' || true)
+        if [[ ! -z $PY_NEURODAMUS_BRANCH ]]; then echo "PY_NEURODAMUS_BRANCH=$PY_NEURODAMUS_BRANCH" >> $GITHUB_ENV; fi
+        NEURODAMUS_MODELS_BRANCH=$(echo $COMMIT_MESSAGE | grep -Po 'NEURODAMUS_MODELS_BRANCH=\K[0-9a-zA-Z/_.\-]*' || true)
+        if [[ ! -z $NEURODAMUS_MODELS_BRANCH ]]; then echo "NEURODAMUS_MODELS_BRANCH=$NEURODAMUS_MODELS_BRANCH" >> $GITHUB_ENV; fi
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y mpich libmpich-dev libhdf5-mpich-dev hdf5-tools flex libfl-dev bison ninja-build
+
+    - name: Cache python virtual env
+      id: cache-venv
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-venv
+      with:
+        path: venv
+        key: ${{ matrix.os }}-libsonata-${{ env.LIBSONATA_BRANCH }}-py${{ matrix.python-version }}
+
+    - name: Upgrade pip and install base Python packages
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      run: |
+        python -m venv venv
+        . ./venv/bin/activate
+        python -m pip install --upgrade pip setuptools
+        pip install cython numpy wheel pkgconfig
+
+    - name: Install libsonata
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      run: |
+        . ./venv/bin/activate
+        CC=mpicc CXX=mpic++ pip install git+https://github.com/BlueBrain/libsonata
+
+    - name: Install libsonatareport
+      run: |
+        mkdir build && cd build
+        cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/install -DCMAKE_BUILD_TYPE=Release -DSONATA_REPORT_ENABLE_SUBMODULES=ON -DSONATA_REPORT_ENABLE_MPI=ON ..
+        cmake --build . --parallel
+        cmake --build . --target install
+        echo "SONATAREPORT_DIR=$(pwd)/install" >> $GITHUB_ENV
+
+    - name: Cache NEURON
+      id: cache-neuron
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-neuron
+      with:
+        path: nrn
+        key: ${{ matrix.os }}-neuron-${{ env.NEURON_BRANCH }}-${{ env.NEURON_COMMIT_ID }}-py${{ matrix.python-version }}
+
+    - name: Install NEURON
+      if: steps.cache-neuron.outputs.cache-hit != 'true'
+      run: |
+        sudo apt-get install flex libfl-dev bison ninja-build
+        if [[ ${{ env.NEURON_BRANCH }} == 'master' ]]; then
+          git clone --branch=${{ env.NEURON_BRANCH }} https://github.com/neuronsimulator/nrn.git
+          cd nrn
+          git checkout ${{ env.NEURON_COMMIT_ID }}
+          cd ..
+        else
+          git clone --branch=${{ env.NEURON_BRANCH }} https://github.com/neuronsimulator/nrn.git --depth=1
+        fi
+        . ./venv/bin/activate
+        python -m pip install --upgrade pip -r nrn/nrn_requirements.txt
+        cmake -B nrn/build -S nrn -G Ninja \
+          -DPYTHON_EXECUTABLE=$(which python) \
+          -DCMAKE_INSTALL_PREFIX=$(pwd)/nrn/build/install \
+          -DNRN_ENABLE_MPI=ON \
+          -DNRN_ENABLE_INTERVIEWS=OFF \
+          -DNRN_ENABLE_CORENEURON=ON \
+          -DCMAKE_C_COMPILER=gcc \
+          -DCMAKE_CXX_COMPILER=g++ \
+          -DCORENRN_ENABLE_REPORTING=ON \
+          -DCMAKE_PREFIX_PATH=${{ env.SONATAREPORT_DIR }}
+        cmake --build nrn/build --parallel
+        cmake --build nrn/build --target install
+
+    - name: Install h5py
+      if: steps.cache-venv.outputs.cache-hit != 'true'
+      run: |
+        . ./venv/bin/activate
+        CC=mpicc CXX=mpic++ pip install --no-binary=h5py h5py
+
+    - name: Install neurodamus
+      run: |
+        . ./venv/bin/activate
+        git clone --branch=${{ env.PY_NEURODAMUS_BRANCH }} https://github.com/BlueBrain/neurodamus.git
+        cd neurodamus
+        pip install .
+
+    - name: Build models
+      run: |
+        export PATH=$(pwd)/nrn/build/install/bin:$PATH
+        # Clone neurodamus-models repository
+        git clone --branch=${{ env.NEURODAMUS_MODELS_BRANCH }} https://github.com/BlueBrain/neurodamus-models.git
+        mkdir -p neurodamus/tests/share/mod
+        cp -L -r neurodamus-models/neocortex/mod/v5/* neurodamus/tests/share/mod
+        cp -L -r neurodamus-models/neocortex/mod/v6/* neurodamus/tests/share/mod
+        cp neurodamus/neurodamus/data/mod/*.mod neurodamus/tests/share/mod/
+        cd neurodamus
+        ./docker/build_neurodamus.sh tests/share/mod
+
+    - name: Example run
+      run: |
+        . ./venv/bin/activate
+        if [ ${{ matrix.python-version }} == 3.9 ]; then
+          export RDMAV_FORK_SAFE=1
+        fi;
+        export PYTHONPATH=$(pwd)/nrn/build/lib/python:$PYTHONPATH
+        cp neurodamus-models/neocortex/hoc/* neurodamus/neurodamus/data/hoc/
+        export HOC_LIBRARY_PATH=$(pwd)/neurodamus/neurodamus/data/hoc
+        export NEURODAMUS_PYTHON=$(pwd)/neurodamus/neurodamus/data
+        export CORENEURONLIB=$(pwd)/neurodamus/x86_64/libcorenrnmech.so
+        export PATH=$(pwd)/neurodamus/x86_64:$PATH
+        which special
+
+        # launch simulation with NEURON
+        cd neurodamus/tests/simulations/usecase3/
+        mpirun -np 2 special -mpi -python $NEURODAMUS_PYTHON/init.py --configFile=simulation_sonata.json
+        ls reporting/*.h5
+        # launch simulation with CORENEURON
+        mpirun -np 2 special -mpi -python $NEURODAMUS_PYTHON/init.py --configFile=simulation_sonata_coreneuron.json
+        ls reporting_coreneuron/*.h5
+
+    # - name: live debug session, comment out
+    #   if: failure()
+    #   uses: mxschmitt/action-tmate@v3
