@@ -16,13 +16,11 @@ int sonata_create_report(const char* report_name,
                          double dt,
                          const char* units,
                          const char* kind) {
+    if (sonata_report.report_exists(report_name)) {
+        return -2;
+    }
     try {
-        if (!sonata_report.report_exists(report_name)) {
-            sonata_report.create_report(report_name, kind, tstart, tend, dt, units);
-        } else {
-            logger->warn("Report '{}' already exists.", report_name);
-            return -2;
-        }
+        sonata_report.create_report(report_name, kind, tstart, tend, dt, units);
     } catch (const std::exception& err) {
         logger->error(err.what());
         return -1;
